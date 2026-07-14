@@ -1,33 +1,97 @@
 const express = require('express');
+const path = require('path');
+const fs = require('fs');
 const sql = require('mssql');
 const cors = require('cors');
+
 const app = express();
-const PORT = 3000;
+const PORT = process.env.PORT || 3000;
+const HOST = '0.0.0.0';
 
 app.use(cors());
 app.use(express.json());
 
+const frontendDir = path.join(__dirname, 'frontend');
+app.use(express.static(frontendDir));
+app.use(express.static(__dirname));
+
+app.get('/', (req, res) => {
+    const homePath = path.join(frontendDir, 'Home.html');
+    console.log('Serving home page from', homePath);
+    res.sendFile(homePath);
+});
+
+app.get(['/Home.html', '/home.html'], (req, res) => {
+    const homePath = path.join(frontendDir, 'Home.html');
+    console.log('Serving home page from', homePath);
+    res.sendFile(homePath);
+});
+
+app.use((req, res, next) => {
+    if (req.path.startsWith('/api/') || req.path.includes('.')) {
+        return next();
+    }
+
+    const homePath = path.join(frontendDir, 'Home.html');
+    if (fs.existsSync(homePath)) {
+        console.log('Fallback route served home page for', req.path);
+        return res.sendFile(homePath);
+    }
+
+    next();
+});
+
+app.get(['/Courses.html', '/courses.html'], (req, res) => {
+    res.sendFile(path.join(frontendDir, 'Courses.html'));
+});
+
+app.get(['/Login.html', '/login.html'], (req, res) => {
+    res.sendFile(path.join(frontendDir, 'Login.html'));
+});
+
+app.get(['/Register.html', '/register.html'], (req, res) => {
+    res.sendFile(path.join(__dirname, 'Register.html'));
+});
+
+app.get(['/kiosk', '/kiosk.html'], (req, res) => {
+    res.sendFile(path.join(frontendDir, 'kiosk.html'));
+});
+
+app.get(['/report', '/report.html'], (req, res) => {
+    res.status(404).send('Report page is not available yet.');
+});
+
 // 🔗 1. ตั้งค่าการเชื่อมต่อ Microsoft SQL Server
 const dbConfig = {
-    user: 'uinet',                       
+    user: 'uinet',
     password: 'p@$$w0rd',
-    server: 'tvsdb2.thanvasupos.com',    
-    port: 28914,                         
-    database: 'BD_PTS',                  
+    server: 'tvsdb2.thanvasupos.com',
+    port: 28914,
+    database: 'BD_PTS',
     options: { encrypt: true, trustServerCertificate: true },
     pool: { max: 10, min: 0, idleTimeoutMillis: 30000 }
 };
 
-const poolPromise = new sql.ConnectionPool(dbConfig)
-    .connect()
-    .then(pool => {
-        console.log('🔌 Connected to Microsoft SQL Server Successfully!');
-        return pool;
-    })
-    .catch(err => {
-        console.error('❌ SQL Server Connection Failed: ', err);
-        process.exit(1);
-    });
+let poolPromise = null;
+
+async function getPool() {
+    if (poolPromise) {
+        return poolPromise;
+    }
+
+    poolPromise = (async () => {
+        try {
+            const pool = await new sql.ConnectionPool(dbConfig).connect();
+            console.log('🔌 Connected to Microsoft SQL Server Successfully!');
+            return pool;
+        } catch (err) {
+            console.error('❌ SQL Server Connection Failed: ', err.message);
+            return null;
+        }
+    })();
+
+    return poolPromise;
+}
 
 // -------------------------------------------------------------------------
 // [จุดที่ 1] API สำหรับหน้าเว็บจริงของคุณ: บันทึกข้อมูลสมัครสมาชิก/ลงทะเบียนพนักงาน
@@ -40,19 +104,21 @@ app.post('/api/users/register', async (req, res) => {
     }
 
     try {
-        const pool = await poolPromise;
-        
-        // คำสั่ง SQL เพิ่มข้อมูลพนักงานโดยใช้ email เป็นคีย์ระบุตัวตน
+        const pool = await getPool();
+        if (!pool) {
+            return res.status(503).json({ success: false, message: 'ฐานข้อมูลไม่พร้อมใช้งานในขณะนี้' });
+        }
+
         const insertUserQuery = `
             INSERT INTO BD_PTS.dbo.users_main (email, full_name, phone, password_hash)
             VALUES (@email, @fullName, @phone, @pass)
         `;
-        
+
         await pool.request()
             .input('email', sql.VarChar, email)
             .input('fullName', sql.NVarChar, full_name)
             .input('phone', sql.VarChar, phone || '-')
-            .input('pass', sql.VarChar, password) 
+            .input('pass', sql.VarChar, password)
             .query(insertUserQuery);
 
         res.json({ success: true, message: 'ลงทะเบียนสมาชิกสำเร็จแล้ว!' });
@@ -67,23 +133,26 @@ app.post('/api/users/register', async (req, res) => {
 });
 
 // -------------------------------------------------------------------------
-// [จุดที่ 2] API สำหรับหน้าตู้ Kiosk: เปลี่ยนมารับค่า QR Code ที่เป็น "อีเมล" 
+// [จุดที่ 2] API สำหรับหน้าตู้ Kiosk: เปลี่ยนมารับค่า QR Code ที่เป็น "อีเมล"
 // -------------------------------------------------------------------------
 app.post('/api/attendance/scan', async (req, res) => {
-    const { employee_id, kiosk_device_id } = req.body; // employee_id ในที่นี้คือ "อีเมล" ที่ได้จากการสแกน QR
+    const { employee_id, kiosk_device_id } = req.body;
 
     if (!employee_id || !kiosk_device_id) {
         return res.status(400).json({ success: false, message: 'ข้อมูลไม่ครบถ้วน' });
     }
 
     try {
-        const pool = await poolPromise;
+        const pool = await getPool();
+        if (!pool) {
+            return res.status(503).json({ success: false, message: 'ฐานข้อมูลไม่พร้อมใช้งานในขณะนี้' });
+        }
+
         const now = new Date();
-        const tzoffset = now.getTimezoneOffset() * 60000; 
+        const tzoffset = now.getTimezoneOffset() * 60000;
         const localISOTime = new Date(now.getTime() - tzoffset).toISOString().slice(0, 19).replace('T', ' ');
         const currentDateOnly = localISOTime.split(' ')[0];
 
-        // ค้นหาพนักงานจากอีเมล
         const userQuery = `SELECT full_name FROM BD_PTS.dbo.users_main WHERE email = @email`;
         const userResult = await pool.request().input('email', sql.VarChar, employee_id).query(userQuery);
 
@@ -93,9 +162,8 @@ app.post('/api/attendance/scan', async (req, res) => {
 
         const empInfo = userResult.recordset[0];
 
-        // ตรวจสอบสถานะสลับสิทธิ์ IN/OUT ของวันปัจจุบัน
         const checkQuery = `
-            SELECT TOP 1 scan_type FROM BD_PTS.dbo.attendance_logs 
+            SELECT TOP 1 scan_type FROM BD_PTS.dbo.attendance_logs
             WHERE employee_id = @email AND CAST(scan_timestamp AS DATE) = CAST(@localDate AS DATE)
             ORDER BY log_id DESC
         `;
@@ -114,7 +182,6 @@ app.post('/api/attendance/scan', async (req, res) => {
             status = 'LATE';
         }
 
-        // บันทึกลงตารางประวัติ
         const insertQuery = `
             INSERT INTO BD_PTS.dbo.attendance_logs (employee_id, scan_timestamp, scan_type, kiosk_device_id, status)
             VALUES (@email, @scanTime, @scanType, @kioskId, @status)
@@ -149,7 +216,11 @@ app.post('/api/attendance/scan', async (req, res) => {
 // -------------------------------------------------------------------------
 app.get('/api/attendance/report', async (req, res) => {
     try {
-        const pool = await poolPromise;
+        const pool = await getPool();
+        if (!pool) {
+            return res.status(503).json({ success: false, message: 'ฐานข้อมูลไม่พร้อมใช้งานในขณะนี้' });
+        }
+
         const reportQuery = `
             SELECT a.log_id, u.email, u.full_name, u.phone, a.scan_timestamp, a.scan_type, a.status
             FROM BD_PTS.dbo.attendance_logs a
@@ -164,13 +235,12 @@ app.get('/api/attendance/report', async (req, res) => {
     }
 });
 
-app.listen(PORT, () => console.log(`🚀 Server running on http://localhost:${PORT}`));
-// ➕ เพิ่มตรงนี้: บังคับให้ Node.js ส่งหน้าตู้สแกน Kiosk ออกมาเมื่อเรียกผ่านพอร์ต 3000
-app.get('/kiosk', (req, res) => {
-    res.sendFile(__dirname + '/kiosk.html');
-});
+if (require.main === module) {
+    const server = app.listen(PORT, HOST, () => {
+        console.log(`🚀 Server running on http://localhost:${PORT}`);
+    });
 
-// ➕ เพิ่มตรงนี้ (แถมให้): ถ้าอยากเปิดดูหน้าเว็บรายงานผ่าน localhost:3000/report ด้วย
-app.get('/report', (req, res) => {
-    res.sendFile(__dirname + '/report.html');
-});
+    module.exports = { app, server };
+} else {
+    module.exports = { app };
+}

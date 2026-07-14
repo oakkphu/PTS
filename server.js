@@ -235,6 +235,31 @@ app.get('/api/attendance/report', async (req, res) => {
     }
 });
 
+// -------------------------------------------------------------------------
+// [จุดที่ 4] API สำหรับดึงข้อมูลคอร์สจากฐานข้อมูล BD_PTS
+// -------------------------------------------------------------------------
+app.get('/api/courses', async (req, res) => {
+    try {
+        const pool = await getPool();
+        if (!pool) {
+            return res.status(503).json({ success: false, message: 'ฐานข้อมูลไม่พร้อมใช้งานในขณะนี้' });
+        }
+
+        const coursesQuery = `
+            SELECT course_id, course_name, instructor_name, delivery_mode, difficulty_level,
+                   total_hours, average_rating, total_reviews, cover_image_url, is_featured
+            FROM BD_PTS.dbo.courses_main
+            ORDER BY is_featured DESC, created_at DESC
+        `;
+
+        const result = await pool.request().query(coursesQuery);
+        res.json({ success: true, data: result.recordset });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ success: false, message: 'ไม่สามารถดึงข้อมูลคอร์สจากฐานข้อมูลได้' });
+    }
+});
+
 if (require.main === module) {
     const server = app.listen(PORT, HOST, () => {
         console.log(`🚀 Server running on http://localhost:${PORT}`);

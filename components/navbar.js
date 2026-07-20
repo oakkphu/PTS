@@ -137,6 +137,8 @@ async function checkUserAndRenderNavbar() {
                                     </div>
                                 </div>
                                 <a class="font-body-md text-body-md text-on-surface-variant hover:text-primary transition-colors flex items-center h-full" href="Community.html">คอมมูนิตี้</a>
+                                <a class="font-body-md text-body-md text-on-surface-variant hover:text-primary transition-colors flex items-center h-full" href="Liked.html">ถูกใจ</a>
+                                <a class="font-body-md text-body-md text-on-surface-variant hover:text-primary transition-colors flex items-center h-full" href="Favorites.html">คอร์สโปรด</a>
                                 <a class="font-body-md text-body-md text-on-surface-variant hover:text-primary transition-colors flex items-center h-full" href="DashbordU.html">แดชบอร์ด</a>
                             </div>
                         </div>
@@ -210,6 +212,8 @@ async function checkUserAndRenderNavbar() {
                                     </div>
                                 </div>
                                 <a class="font-body-md text-body-md text-on-surface-variant hover:text-primary transition-colors flex items-center h-full" href="Community.html">คอมมูนิตี้</a>
+                                <a class="font-body-md text-body-md text-on-surface-variant hover:text-primary transition-colors flex items-center h-full" href="Liked.html">ถูกใจ</a>
+                                <a class="font-body-md text-body-md text-on-surface-variant hover:text-primary transition-colors flex items-center h-full" href="Favorites.html">คอร์สโปรด</a>
                                 <a class="font-body-md text-body-md text-on-surface-variant hover:text-primary transition-colors flex items-center h-full" href="DashbordU.html">แดชบอร์ด</a>
                                 <a class="font-body-md text-body-md text-on-surface-variant hover:text-primary transition-colors flex items-center h-full" href="Admin.html">Admin</a>
                             </div>

@@ -69,6 +69,14 @@ async function ensureLearningSchema(pool) {
             reference_code VARCHAR(64) NULL,
             paid_at DATETIME NULL,
             created_at DATETIME NOT NULL CONSTRAINT DF_payments_created DEFAULT (GETDATE())
+         )`,
+        `IF NOT EXISTS (SELECT 1 FROM sys.tables WHERE name = 'course_favorites')
+         CREATE TABLE dbo.course_favorites (
+            favorite_id INT IDENTITY(1,1) NOT NULL PRIMARY KEY,
+            user_id INT NOT NULL,
+            course_id INT NOT NULL,
+            created_at DATETIME NOT NULL CONSTRAINT DF_course_favorites_created DEFAULT (GETDATE()),
+            CONSTRAINT UQ_course_favorites_user_course UNIQUE (user_id, course_id)
          )`
     ];
 

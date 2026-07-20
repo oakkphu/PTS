@@ -83,6 +83,10 @@
       @media (min-width:640px) {
         .pts-topnav__user-meta { display:block !important; }
       }
+      @media (max-width:767px) {
+        .pts-topnav__btn--desktop { display:none !important; }
+        .pts-topnav__tag { display:none; }
+      }
     `;
     document.head.appendChild(style);
   }

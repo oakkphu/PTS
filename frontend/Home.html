@@ -131,9 +131,9 @@
 <p class="font-[family-name:var(--pts-display)] text-[13px] font-bold tracking-[0.22em] uppercase text-primary">PTS Learning</p>
 <h1 class="font-headline-xl text-headline-xl text-on-surface md:text-[52px] md:leading-[1.12]">ยกระดับทักษะ <span class="text-primary">Personal Assistant</span> สู่มาตรฐานมืออาชีพ</h1>
 <p class="font-body-lg text-body-lg text-on-surface-variant max-w-lg">เรียน Online · Onsite · Hybrid ในระบบเดียว พร้อมตารางเรียน ใบประกาศ และคอมมูนิตี้ผู้ช่วยมืออาชีพ</p>
-<div class="flex flex-wrap gap-md pt-sm">
+<div class="flex flex-wrap gap-md pt-sm" id="home-hero-actions">
 <button class="px-xl py-4 bg-primary text-on-primary rounded-full font-headline-sm text-headline-sm hover:opacity-90 active:scale-95 transition-all shadow-lg shadow-primary/20" onclick="location.href='Courses.html'">ดูหลักสูตร</button>
-<button class="px-xl py-4 bg-white text-primary rounded-full font-headline-sm text-headline-sm border border-primary/25 hover:bg-primary/5 active:scale-95 transition-all" onclick="location.href='Register.html'">สมัครสมาชิก</button>
+<button id="home-register-btn" class="px-xl py-4 bg-white text-primary rounded-full font-headline-sm text-headline-sm border border-primary/25 hover:bg-primary/5 active:scale-95 transition-all" onclick="location.href='Register.html'">สมัครสมาชิก</button>
 </div>
 </div>
 <div class="relative">
@@ -466,6 +466,14 @@ document.addEventListener('DOMContentLoaded', async () => {
   const scheduleEl = document.getElementById('home-schedules');
   let allCourses = [];
   let activeMode = '';
+
+  // ซ่อนปุ่มสมัครสมาชิกใน hero เมื่อล็อกอินแล้ว
+  try {
+    const me = await fetch('/api/users/me', { credentials: 'include' }).then((r) => r.json());
+    if (me.loggedIn) {
+      document.getElementById('home-register-btn')?.remove();
+    }
+  } catch (_) {}
 
   const modeBadge = (mode) => {
     const m = String(mode || 'online').toLowerCase();

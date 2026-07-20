@@ -93,18 +93,46 @@
         display:block; width:100%; text-align:left; padding:12px 8px; border:none; background:transparent;
         font:inherit; font-weight:600; color:#1c1520; text-decoration:none; border-radius:10px; cursor:pointer;
       }
-      .pts-topnav__user { display:flex; align-items:center; gap:8px; border:none; background:transparent; cursor:pointer; padding:4px; }
+      .pts-topnav__user { display:flex; align-items:center; gap:8px; border:none; background:transparent; cursor:pointer; padding:4px; border-radius:999px; }
+      .pts-topnav__user:hover { background:#f6e6ea; }
       .pts-topnav__user img { width:36px; height:36px; border-radius:999px; object-fit:cover; border:2px solid #f6e6ea; }
-      .pts-topnav__drop {
-        position:absolute; right:0; top:calc(100% + 8px); width:210px; background:#fff;
-        border:1px solid rgba(151,66,88,.14); border-radius:14px; box-shadow:0 10px 30px rgba(0,0,0,.08);
-        overflow:hidden; z-index:100000; display:none;
+      .pts-topnav__drop { display:none !important; }
+      .pts-drawer-backdrop {
+        position:fixed; inset:0; background:rgba(28,21,32,.35); z-index:100000;
+        opacity:0; pointer-events:none; transition:opacity .2s ease;
       }
-      .pts-topnav__drop.is-open { display:block; }
-      .pts-topnav__drop a, .pts-topnav__drop button {
-        display:block; width:100%; text-align:left; padding:12px 14px; border:none; background:transparent;
-        font:inherit; font-size:14px; color:#1c1520; text-decoration:none; cursor:pointer;
+      .pts-drawer-backdrop.is-open { opacity:1; pointer-events:auto; }
+      .pts-drawer {
+        position:fixed; top:0; left:0; bottom:0; width:min(300px,86vw); z-index:100001;
+        background:#fff; border-right:1px solid rgba(151,66,88,.14);
+        box-shadow:8px 0 32px rgba(28,21,32,.12);
+        transform:translateX(-105%); transition:transform .25s ease;
+        display:flex; flex-direction:column; font-family:'IBM Plex Sans Thai',Sarabun,sans-serif;
       }
+      .pts-drawer.is-open { transform:translateX(0); }
+      .pts-drawer__head {
+        display:flex; align-items:center; gap:12px; padding:20px 18px 16px;
+        border-bottom:1px solid rgba(151,66,88,.12); background:linear-gradient(180deg,#faf4f6,#fff);
+      }
+      .pts-drawer__head img {
+        width:48px; height:48px; border-radius:999px; object-fit:cover; border:2px solid #f6e6ea;
+      }
+      .pts-drawer__name { font-size:15px; font-weight:700; color:#1c1520; line-height:1.2; }
+      .pts-drawer__role { font-size:11px; font-weight:700; color:#974258; text-transform:uppercase; letter-spacing:.04em; margin-top:2px; }
+      .pts-drawer__close {
+        margin-left:auto; width:36px; height:36px; border:none; border-radius:999px;
+        background:transparent; cursor:pointer; font-size:20px; color:#6b5c62;
+      }
+      .pts-drawer__close:hover { background:#f6e6ea; color:#974258; }
+      .pts-drawer__nav { padding:10px 10px 20px; overflow:auto; flex:1; }
+      .pts-drawer__nav a, .pts-drawer__nav button {
+        display:flex; align-items:center; width:100%; text-align:left; padding:13px 14px;
+        border:none; background:transparent; font:inherit; font-size:15px; font-weight:600;
+        color:#1c1520; text-decoration:none; border-radius:12px; cursor:pointer;
+      }
+      .pts-drawer__nav a:hover, .pts-drawer__nav button:hover { background:#f6e6ea; color:#974258; }
+      .pts-drawer__nav .pts-drawer__logout { color:#ba1a1a; margin-top:8px; border-top:1px solid rgba(151,66,88,.1); border-radius:0 0 12px 12px; padding-top:16px; }
+      .pts-drawer__nav .pts-drawer__logout:hover { background:#fee2e2; color:#ba1a1a; }
       @media (min-width:768px) {
         .pts-topnav__inner { padding:0 28px; }
         .pts-topnav__btn--desktop { display:inline-flex !important; }
@@ -189,14 +217,60 @@
     if (burger && mobile) {
       burger.onclick = () => mobile.classList.toggle('is-open');
     }
+
     const userBtn = root.querySelector('[data-pts-user]');
-    const drop = root.querySelector('[data-pts-drop]');
-    if (userBtn && drop) {
+    const drawer = document.getElementById('pts-profile-drawer');
+    const backdrop = document.getElementById('pts-drawer-backdrop');
+    const closeBtn = document.getElementById('pts-drawer-close');
+
+    function openDrawer() {
+      if (!drawer || !backdrop) return;
+      drawer.classList.add('is-open');
+      backdrop.classList.add('is-open');
+      document.body.style.overflow = 'hidden';
+    }
+    function closeDrawer() {
+      if (!drawer || !backdrop) return;
+      drawer.classList.remove('is-open');
+      backdrop.classList.remove('is-open');
+      document.body.style.overflow = '';
+    }
+
+    if (userBtn) {
       userBtn.onclick = (e) => {
         e.stopPropagation();
-        drop.classList.toggle('is-open');
+        if (drawer && drawer.classList.contains('is-open')) closeDrawer();
+        else openDrawer();
       };
     }
+    if (closeBtn) closeBtn.onclick = closeDrawer;
+    if (backdrop) backdrop.onclick = closeDrawer;
+  }
+
+  function profileDrawerHtml(name, roleLabel, avatar, isAdmin) {
+    return `
+      <div id="pts-drawer-backdrop" class="pts-drawer-backdrop" aria-hidden="true"></div>
+      <aside id="pts-profile-drawer" class="pts-drawer" aria-label="เมนูบัญชีผู้ใช้">
+        <div class="pts-drawer__head">
+          <img src="${avatar}" alt="">
+          <div>
+            <div class="pts-drawer__name">${name}</div>
+            <div class="pts-drawer__role">${roleLabel}</div>
+          </div>
+          <button type="button" class="pts-drawer__close" id="pts-drawer-close" aria-label="ปิด">×</button>
+        </div>
+        <nav class="pts-drawer__nav">
+          <a href="DashbordU.html">แดชบอร์ด</a>
+          <a href="Certificates.html">ใบประกาศ</a>
+          <a href="Payments.html">ชำระเงิน</a>
+          <a href="Favorites.html">คอร์สโปรด</a>
+          <a href="Liked.html">โพสต์ถูกใจ</a>
+          <a href="Settings.html">ตั้งค่า</a>
+          <a href="Schedule.html">ตารางเรียน</a>
+          ${isAdmin ? '<a href="Admin.html">Admin</a>' : ''}
+          <button type="button" class="pts-drawer__logout" onclick="logout()">ออกจากระบบ</button>
+        </nav>
+      </aside>`;
   }
 
   function renderGuest(container) {
@@ -248,25 +322,13 @@
           </div>
           <div class="pts-topnav__actions">
             <a href="Notifications.html" class="pts-topnav__icon" title="การแจ้งเตือน" aria-label="การแจ้งเตือน">🔔</a>
-            <div style="position:relative">
-              <button type="button" class="pts-topnav__user" data-pts-user>
-                <span style="display:none;text-align:right;line-height:1.15" class="pts-topnav__user-meta">
-                  <span style="display:block;font-size:13px;font-weight:700">${name}</span>
-                  <span style="display:block;font-size:10px;font-weight:700;color:#974258;text-transform:uppercase">${roleLabel}</span>
-                </span>
-                <img src="${avatar}" alt="">
-              </button>
-              <div class="pts-topnav__drop" data-pts-drop>
-                <a href="DashbordU.html">แดชบอร์ด</a>
-                <a href="Certificates.html">ใบประกาศ</a>
-                <a href="Payments.html">ชำระเงิน</a>
-                <a href="Favorites.html">คอร์สโปรด</a>
-                <a href="Liked.html">โพสต์ถูกใจ</a>
-                <a href="Settings.html">ตั้งค่า</a>
-                ${isAdmin ? '<a href="Admin.html">Admin</a>' : ''}
-                <button type="button" onclick="logout()" style="color:#ba1a1a;font-weight:700">ออกจากระบบ</button>
-              </div>
-            </div>
+            <button type="button" class="pts-topnav__user" data-pts-user aria-label="เปิดเมนูบัญชี">
+              <span style="display:none;text-align:right;line-height:1.15" class="pts-topnav__user-meta">
+                <span style="display:block;font-size:13px;font-weight:700">${name}</span>
+                <span style="display:block;font-size:10px;font-weight:700;color:#974258;text-transform:uppercase">${roleLabel}</span>
+              </span>
+              <img src="${avatar}" alt="">
+            </button>
             <button type="button" class="pts-topnav__icon pts-topnav__burger" data-pts-burger aria-label="เมนู">☰</button>
           </div>
         </div>
@@ -280,7 +342,8 @@
           ${isAdmin ? '<a href="Admin.html">Admin</a>' : ''}
           <button type="button" onclick="logout()" style="color:#ba1a1a">ออกจากระบบ</button>
         </div>
-      </nav>`;
+      </nav>
+      ${profileDrawerHtml(name, roleLabel, avatar, isAdmin)}`;
     bindToggles(container);
   }
 
@@ -333,9 +396,15 @@
       window.location.href = `Courses.html?filter=${String(filterType).toLowerCase()}`;
       return;
     }
-    if (!e.target.closest('[data-pts-user]') && !e.target.closest('[data-pts-drop]')) {
-      document.querySelectorAll('[data-pts-drop].is-open').forEach((el) => el.classList.remove('is-open'));
-    }
+  });
+
+  document.addEventListener('keydown', (e) => {
+    if (e.key !== 'Escape') return;
+    const drawer = document.getElementById('pts-profile-drawer');
+    const backdrop = document.getElementById('pts-drawer-backdrop');
+    if (drawer) drawer.classList.remove('is-open');
+    if (backdrop) backdrop.classList.remove('is-open');
+    document.body.style.overflow = '';
   });
 
   function boot() {

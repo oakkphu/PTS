@@ -2,7 +2,12 @@
 <meta charset="utf-8">
 <meta content="width=device-width, initial-scale=1.0" name="viewport">
 <title>เข้าสู่ระบบ | PTS Learning</title>
-<link rel="stylesheet" href="site.css?v=20260720c">
+<link rel="stylesheet" href="site.css?v=20260720d">
+<style>
+  /* Edge native eye — hide so only our toggle shows */
+  input[type="password"]::-ms-reveal,
+  input[type="password"]::-ms-clear { display: none !important; width: 0 !important; height: 0 !important; }
+</style>
 <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet">
@@ -195,8 +200,8 @@
 <div class="relative group">
 <span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-outline group-focus-within:text-primary transition-colors">lock</span>
 <input class="w-full pl-12 pr-12 py-3.5 rounded-[12px] border border-outline-variant bg-white focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all outline-none font-body-md text-body-md" id="password" placeholder="••••••••" type="password" required>
-<button class="absolute right-4 top-1/2 -translate-y-1/2 text-outline hover:text-on-surface transition-colors hidden" type="button" id="toggle-password-btn" aria-label="แสดงหรือซ่อนรหัสผ่าน">
-<span class="material-symbols-outlined" id="password-icon">visibility</span>
+<button class="pts-pw-toggle absolute right-4 top-1/2 -translate-y-1/2 text-outline hover:text-on-surface transition-colors hidden" type="button" id="toggle-password-btn" data-pts-pw-toggle="1" aria-label="แสดงหรือซ่อนรหัสผ่าน">
+<span class="material-symbols-outlined" id="password-icon" aria-hidden="true">visibility</span>
 </button>
 </div>
 </div>
@@ -245,7 +250,10 @@
                 </div>
                 <div class="space-y-1">
                     <label class="text-[14px] font-medium text-on-surface-variant">ตั้งรหัสผ่านใหม่</label>
-                    <input type="password" id="reset-new-password" placeholder="••••••••" class="w-full px-4 py-3 rounded-[12px] border border-outline-variant bg-surface-container-lowest focus:ring-2 focus:ring-primary/20 focus:border-primary text-[15px] outline-none transition-all">
+                    <div class="relative pts-pw-wrap">
+                      <input type="password" id="reset-new-password" placeholder="••••••••" class="w-full pl-4 pr-12 py-3 rounded-[12px] border border-outline-variant bg-surface-container-lowest focus:ring-2 focus:ring-primary/20 focus:border-primary text-[15px] outline-none transition-all" data-pts-pw-field="1">
+                      <button type="button" class="pts-pw-toggle hidden" data-pts-pw-toggle="1" aria-label="แสดงหรือซ่อนรหัสผ่าน"><span class="material-symbols-outlined" aria-hidden="true">visibility</span></button>
+                    </div>
                 </div>
             </div>
         </div>
@@ -263,45 +271,14 @@
         const inputs = document.querySelectorAll('input');
         inputs.forEach(input => {
             input.addEventListener('focus', () => {
-                const icon = input.parentElement.querySelector('span');
+                const icon = input.parentElement.querySelector(':scope > span.material-symbols-outlined');
                 if(icon) icon.classList.add('text-primary');
             });
             input.addEventListener('blur', () => {
-                const icon = input.parentElement.querySelector('span');
+                const icon = input.parentElement.querySelector(':scope > span.material-symbols-outlined');
                 if(icon) icon.classList.remove('text-primary');
             });
         });
-
-        // 2. ปุ่มตา: แสดงเฉพาะตอนมีรหัสในช่อง
-        const passwordInput = document.getElementById('password');
-        const togglePasswordBtn = document.getElementById('toggle-password-btn');
-        const passwordIcon = document.getElementById('password-icon');
-        function syncLoginPasswordToggle() {
-            if (!passwordInput || !togglePasswordBtn || !passwordIcon) return;
-            const hasValue = passwordInput.value.length > 0;
-            togglePasswordBtn.classList.toggle('hidden', !hasValue);
-            if (!hasValue) {
-                passwordInput.type = 'password';
-                passwordIcon.textContent = 'visibility';
-            }
-        }
-        if (passwordInput) {
-            passwordInput.addEventListener('input', syncLoginPasswordToggle);
-            passwordInput.addEventListener('change', syncLoginPasswordToggle);
-            syncLoginPasswordToggle();
-        }
-        if (togglePasswordBtn) {
-            togglePasswordBtn.addEventListener('click', () => {
-                if (!passwordInput || !passwordIcon) return;
-                if (passwordInput.type === 'password') {
-                    passwordInput.type = 'text';
-                    passwordIcon.textContent = 'visibility_off';
-                } else {
-                    passwordInput.type = 'password';
-                    passwordIcon.textContent = 'visibility';
-                }
-            });
-        }
 
         // 3. ปรับเอฟเฟกต์ยุบตัวของปุ่ม (ของเดิม)
         const buttons = document.querySelectorAll('button');
@@ -485,5 +462,6 @@
   }
 })();
 </script>
+<script src="password-toggle.js?v=20260720d"></script>
 <script src="navbar.js?v=20260720i"></script>
 </body></html>

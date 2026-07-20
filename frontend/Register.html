@@ -2,7 +2,11 @@
 <meta charset="utf-8">
 <meta content="width=device-width, initial-scale=1.0" name="viewport">
 <title>สมัครสมาชิก | PTS Learning</title>
-<link rel="stylesheet" href="site.css?v=20260720c">
+<link rel="stylesheet" href="site.css?v=20260720d">
+<style>
+  input[type="password"]::-ms-reveal,
+  input[type="password"]::-ms-clear { display: none !important; width: 0 !important; height: 0 !important; }
+</style>
 <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet">
@@ -200,8 +204,8 @@
 <div class="relative group">
 <span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-outline group-focus-within:text-primary transition-colors">lock</span>
 <input class="w-full pl-12 pr-12 rounded-[12px] border border-outline-variant bg-surface-container-lowest focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all outline-none font-body-md text-body-md py-2" id="password" placeholder="••••••••" type="password" required>
-<button class="absolute right-4 top-1/2 -translate-y-1/2 text-outline hover:text-on-surface transition-colors hidden" type="button" id="toggle-password-btn" onclick="togglePasswordVisibility('password')" aria-label="แสดงหรือซ่อนรหัสผ่าน">
-<span class="material-symbols-outlined" id="password-icon">visibility</span>
+<button class="pts-pw-toggle absolute right-4 top-1/2 -translate-y-1/2 text-outline hover:text-on-surface transition-colors hidden" type="button" id="toggle-password-btn" data-pts-pw-toggle="1" aria-label="แสดงหรือซ่อนรหัสผ่าน">
+<span class="material-symbols-outlined" id="password-icon" aria-hidden="true">visibility</span>
 </button>
 </div>
 </div>
@@ -210,8 +214,8 @@
 <div class="relative group">
 <span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-outline group-focus-within:text-primary transition-colors">lock_reset</span>
 <input class="w-full pl-12 pr-12 rounded-[12px] border border-outline-variant bg-surface-container-lowest focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all outline-none font-body-md text-body-md py-2" id="confirm-password" placeholder="••••••••" type="password" required>
-<button class="absolute right-4 top-1/2 -translate-y-1/2 text-outline hover:text-on-surface transition-colors hidden" type="button" id="toggle-confirm-password-btn" onclick="togglePasswordVisibility('confirm-password')" aria-label="แสดงหรือซ่อนรหัสผ่าน">
-<span class="material-symbols-outlined" id="confirm-password-icon">visibility</span>
+<button class="pts-pw-toggle absolute right-4 top-1/2 -translate-y-1/2 text-outline hover:text-on-surface transition-colors hidden" type="button" id="toggle-confirm-password-btn" data-pts-pw-toggle="1" aria-label="แสดงหรือซ่อนรหัสผ่าน">
+<span class="material-symbols-outlined" id="confirm-password-icon" aria-hidden="true">visibility</span>
 </button>
 </div>
 </div>
@@ -239,51 +243,13 @@
         // ไอคอนการกรอกข้อมูล Focus Interaction
         document.querySelectorAll('input').forEach(input => {
             input.addEventListener('focus', () => {
-                const icon = input.parentElement.querySelector('span');
+                const icon = input.parentElement.querySelector(':scope > span.material-symbols-outlined');
                 if (icon) icon.classList.add('text-primary');
             });
             input.addEventListener('blur', () => {
-                const icon = input.parentElement.querySelector('span');
+                const icon = input.parentElement.querySelector(':scope > span.material-symbols-outlined');
                 if (icon) icon.classList.remove('text-primary');
             });
-        });
-
-        // ปุ่มตา: แสดงเฉพาะตอนมีรหัสในช่อง
-        function getPasswordToggleBtn(id) {
-            if (id === 'password') return document.getElementById('toggle-password-btn');
-            if (id === 'confirm-password') return document.getElementById('toggle-confirm-password-btn');
-            return null;
-        }
-        function syncPasswordToggle(id) {
-            const input = document.getElementById(id);
-            const icon = document.getElementById(`${id}-icon`);
-            const btn = getPasswordToggleBtn(id);
-            if (!input || !icon || !btn) return;
-            const hasValue = input.value.length > 0;
-            btn.classList.toggle('hidden', !hasValue);
-            if (!hasValue) {
-                input.type = 'password';
-                icon.textContent = 'visibility';
-            }
-        }
-        function togglePasswordVisibility(id) {
-            const input = document.getElementById(id);
-            const icon = document.getElementById(`${id}-icon`);
-            if (!input || !icon || !input.value.length) return;
-            if (input.type === 'password') {
-                input.type = 'text';
-                icon.textContent = 'visibility_off';
-            } else {
-                input.type = 'password';
-                icon.textContent = 'visibility';
-            }
-        }
-        ['password', 'confirm-password'].forEach((id) => {
-            const input = document.getElementById(id);
-            if (!input) return;
-            input.addEventListener('input', () => syncPasswordToggle(id));
-            input.addEventListener('change', () => syncPasswordToggle(id));
-            syncPasswordToggle(id);
         });
 
         // ⚡ ระบบส่งข้อมูลเข้าฐานข้อมูลจริง (Connect with Node.js 后台)
@@ -372,5 +338,6 @@
   }
 })();
 </script>
+<script src="password-toggle.js?v=20260720d"></script>
 <script src="navbar.js?v=20260720i"></script>
 </body></html>

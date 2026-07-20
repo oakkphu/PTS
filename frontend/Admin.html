@@ -4,12 +4,16 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Admin | PTS Learning</title>
-<link rel="stylesheet" href="site.css?v=20260720c">
+<link rel="stylesheet" href="site.css?v=20260720d">
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@400;500;600;700&display=swap" rel="stylesheet">
 <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet">
 <script src="https://cdn.tailwindcss.com"></script>
 <script>tailwind.config={theme:{extend:{colors:{primary:'#974258',background:'#fcf8ff','on-surface':'#1a1930','on-surface-variant':'#544245'}}}}</script>
-<style>body{font-family:'IBM Plex Sans Thai',sans-serif}.tab-btn.active{background:#974258;color:#fff}</style>
+<style>
+  input[type="password"]::-ms-reveal,
+  input[type="password"]::-ms-clear { display: none !important; width: 0 !important; height: 0 !important; }
+  body{font-family:'IBM Plex Sans Thai',sans-serif}.tab-btn.active{background:#974258;color:#fff}
+</style>
 </head>
 <body class="pts-body text-on-surface">
 <div id="app-navbar">
@@ -318,10 +322,14 @@ async function renderMail() {
         <input id="m-user" class="mt-1 w-full border rounded-xl px-3 py-2" placeholder="you@thanvasu.com" value="${escapeHtml(f.smtpUser||'')}">
       </label>
       <label class="text-sm">SMTP Password / App Password ${f.hasSmtpPass ? '<span class="text-emerald-700">(มีรหัสบันทึกไว้แล้ว — เว้นว่างถ้าไม่เปลี่ยน)</span>' : ''}
-        <input id="m-pass" type="password" class="mt-1 w-full border rounded-xl px-3 py-2" placeholder="${f.hasSmtpPass ? '••••••••' : 'รหัสผ่านอีเมล'}">
+        <div class="pts-pw-wrap relative mt-1">
+          <input id="m-pass" type="password" class="w-full border rounded-xl px-3 py-2 pr-12 pts-pw-input" data-pts-pw-field="1" placeholder="${f.hasSmtpPass ? '••••••••' : 'รหัสผ่านอีเมล'}">
+        </div>
       </label>
       <label class="text-sm">Brevo API Key ${f.hasBrevoKey ? '<span class="text-emerald-700">(มีคีย์แล้ว — เว้นว่างถ้าไม่เปลี่ยน)</span>' : ''}
-        <input id="m-brevo" type="password" class="mt-1 w-full border rounded-xl px-3 py-2" placeholder="${f.hasBrevoKey ? '••••••••' : 'xkeysib-...'}">
+        <div class="pts-pw-wrap relative mt-1">
+          <input id="m-brevo" type="password" class="w-full border rounded-xl px-3 py-2 pr-12 pts-pw-input" data-pts-pw-field="1" placeholder="${f.hasBrevoKey ? '••••••••' : 'xkeysib-...'}">
+        </div>
       </label>
     </div>
     <div class="flex flex-wrap gap-2 mb-6">
@@ -334,6 +342,8 @@ async function renderMail() {
       <button id="test-mail" class="pts-btn pts-btn-outline">ส่ง OTP ทดสอบ</button>
     </div>
     <p id="mail-msg" class="pts-msg"></p>`;
+
+  if (window.PtsPasswordToggle) window.PtsPasswordToggle.bindAll(document.getElementById('panel'));
 
   document.getElementById('save-mail').onclick = async () => {
     const msg = document.getElementById('mail-msg');
@@ -423,6 +433,7 @@ document.querySelectorAll('.tab-btn').forEach(btn => {
   }
 })();
 </script>
+<script src="password-toggle.js?v=20260720d"></script>
 <script src="navbar.js?v=20260720i"></script>
 </body>
 </html>

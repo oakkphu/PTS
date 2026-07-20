@@ -4,7 +4,11 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>ตั้งค่าบัญชี | PTS Learning</title>
-<link rel="stylesheet" href="site.css?v=20260720c">
+<link rel="stylesheet" href="site.css?v=20260720d">
+<style>
+  input[type="password"]::-ms-reveal,
+  input[type="password"]::-ms-clear { display: none !important; width: 0 !important; height: 0 !important; }
+</style>
 <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet">
 <script src="https://cdn.tailwindcss.com"></script>
 <script>tailwind.config={theme:{extend:{colors:{primary:'#974258','on-surface-variant':'#5c4f55',error:'#ba1a1a'}}}}</script>
@@ -44,8 +48,18 @@
   <section class="pts-panel">
     <h2 class="font-bold text-lg mb-2">เปลี่ยนรหัสผ่าน</h2>
     <p class="text-sm text-on-surface-variant mb-4">ระบบส่ง OTP ไปที่อีเมลบัญชีเพื่อยืนยันก่อนเปลี่ยนรหัสผ่าน</p>
-    <label class="pts-field"><span>รหัสผ่านปัจจุบัน</span><input id="current_password" type="password" class="pts-input"></label>
-    <label class="pts-field"><span>รหัสผ่านใหม่</span><input id="new_password" type="password" class="pts-input"></label>
+    <label class="pts-field"><span>รหัสผ่านปัจจุบัน</span>
+      <div class="pts-pw-wrap relative">
+        <input id="current_password" type="password" class="pts-input pts-pw-input" data-pts-pw-field="1">
+        <button type="button" class="pts-pw-toggle hidden" data-pts-pw-toggle="1" aria-label="แสดงหรือซ่อนรหัสผ่าน"><span class="material-symbols-outlined" aria-hidden="true">visibility</span></button>
+      </div>
+    </label>
+    <label class="pts-field"><span>รหัสผ่านใหม่</span>
+      <div class="pts-pw-wrap relative">
+        <input id="new_password" type="password" class="pts-input pts-pw-input" data-pts-pw-field="1">
+        <button type="button" class="pts-pw-toggle hidden" data-pts-pw-toggle="1" aria-label="แสดงหรือซ่อนรหัสผ่าน"><span class="material-symbols-outlined" aria-hidden="true">visibility</span></button>
+      </div>
+    </label>
     <div class="flex flex-col sm:flex-row gap-3 items-stretch sm:items-end mb-3">
       <label class="pts-field flex-1 mb-0"><span>รหัส OTP จากอีเมล</span>
         <input id="password_otp" type="text" maxlength="6" inputmode="numeric" class="pts-input text-center tracking-[0.3em] font-bold" placeholder="••••••">
@@ -146,6 +160,7 @@ document.getElementById('save-password').onclick = async () => {
   }
 })();
 </script>
+<script src="password-toggle.js?v=20260720d"></script>
 <script src="navbar.js?v=20260720i"></script>
 </body>
 </html>

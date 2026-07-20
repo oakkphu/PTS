@@ -23,6 +23,37 @@ function courseLinks() {
       <a class="pts-nav__link" href="Courses.html?filter=hybrid">Hybrid</a>`;
 }
 
+function currentPage() {
+    const path = (location.pathname || '').split('/').pop() || '';
+    return path.toLowerCase();
+}
+
+function guestAuthActions() {
+    const page = currentPage();
+    if (page === 'login.html') {
+        return `<a class="pts-btn pts-btn-primary pts-nav__hide-mobile" href="Register.html">สมัครสมาชิก</a>`;
+    }
+    if (page === 'register.html') {
+        return `<a class="pts-btn pts-btn-outline pts-nav__hide-mobile" href="Login.html">เข้าสู่ระบบ</a>`;
+    }
+    return `
+      <a class="pts-nav__link pts-nav__hide-mobile" href="Login.html">เข้าสู่ระบบ</a>
+      <a class="pts-btn pts-btn-primary pts-nav__hide-mobile" href="Register.html">สมัครสมาชิก</a>`;
+}
+
+function guestAuthMobile() {
+    const page = currentPage();
+    if (page === 'login.html') {
+        return `<a href="Register.html" style="font-weight:700;color:var(--pts-primary)">สมัครสมาชิก</a>`;
+    }
+    if (page === 'register.html') {
+        return `<a href="Login.html">เข้าสู่ระบบ</a>`;
+    }
+    return `
+      <a href="Login.html">เข้าสู่ระบบ</a>
+      <a href="Register.html" style="font-weight:700;color:var(--pts-primary)">สมัครสมาชิก</a>`;
+}
+
 function mobileBlock(extra = '') {
     return `
       <div id="mobile-menu" class="pts-mobile-menu">
@@ -30,8 +61,7 @@ function mobileBlock(extra = '') {
         <a href="Courses.html">หลักสูตร</a>
         <a href="Community.html">คอมมูนิตี้</a>
         ${extra}
-        <a href="Login.html">เข้าสู่ระบบ</a>
-        <a href="Register.html" style="font-weight:700;color:var(--pts-primary)">สมัครสมาชิก</a>
+        ${guestAuthMobile()}
       </div>`;
 }
 
@@ -64,8 +94,7 @@ async function checkUserAndRenderNavbar() {
                     <a class="pts-nav__link" href="Community.html">คอมมูนิตี้</a>
                   </div>
                   <div class="pts-nav__actions">
-                    <a class="pts-btn pts-btn-outline pts-nav__hide-mobile" href="Login.html">เข้าสู่ระบบ</a>
-                    <a class="pts-btn pts-btn-primary pts-nav__hide-mobile" href="Register.html">สมัครสมาชิก</a>
+                    ${guestAuthActions()}
                     <button type="button" id="mobile-menu-btn" class="pts-nav__icon pts-nav__burger" aria-label="เมนู">
                       <span class="material-symbols-outlined">menu</span>
                     </button>

@@ -277,11 +277,12 @@ async function renderMail() {
       <p class="font-bold ${s.ready ? 'text-emerald-800' : 'text-amber-800'}">${s.ready ? 'พร้อมส่งอีเมล OTP จริง' : 'ยังไม่พร้อม — กรุณาตั้งค่าด้านล่าง'}</p>
       <p class="text-sm mt-1 text-on-surface-variant">SMTP: ${s.smtpConfigured ? 'ตั้งแล้ว' : 'ยังไม่ตั้ง'} · Brevo: ${s.brevoConfigured ? 'ตั้งแล้ว' : 'ยังไม่ตั้ง'} · From: ${escapeHtml(s.fromEmail || '-')}</p>
     </div>
-    <h2 class="font-bold text-lg mb-2">ตั้งค่าส่ง Email OTP จริง</h2>
+    <h2 class="font-bold text-lg mb-2">ตั้งค่าอีเมลผู้ส่งของระบบ</h2>
     <p class="text-sm text-on-surface-variant mb-4">
-      <strong>thanvasu.com ใช้ Google Workspace</strong> — ใช้ SMTP <code>smtp.gmail.com</code><br>
+      <strong>thanvasu.com ใช้ Google Workspace</strong> — SMTP <code>smtp.gmail.com</code><br>
+      อีเมลด้านล่างคือ<strong>ผู้ส่งของระบบ (กล่องเดียว)</strong> แต่ OTP จะถูกส่งไปหา<strong>อีเมลของผู้ใช้ทุกคน</strong>ที่มีในฐานข้อมูล (Gmail, Hotmail, เมลบริษัท ฯลฯ ไม่จำกัด)<br>
       สร้าง App Password ที่ <a class="text-primary font-bold underline" href="https://myaccount.google.com/apppasswords" target="_blank" rel="noopener">myaccount.google.com/apppasswords</a>
-      แล้ววางรหัส 16 ตัวด้านล่าง (หรือแก้ไฟล์ <code>backend/mail.local.js</code>)
+      หรือแก้ <code>backend/mail.local.js</code>
     </p>
     <div class="grid grid-cols-1 md:grid-cols-2 gap-3 mb-4">
       <label class="text-sm">โหมด
@@ -294,7 +295,7 @@ async function renderMail() {
       <label class="text-sm">ชื่อผู้ส่ง
         <input id="m-from-name" class="mt-1 w-full border rounded-xl px-3 py-2" value="${escapeHtml(f.fromName||'PTS Learning')}">
       </label>
-      <label class="text-sm">อีเมลผู้ส่ง (From)
+      <label class="text-sm">อีเมลผู้ส่งของระบบ (From — กล่องเดียว)
         <input id="m-from-email" class="mt-1 w-full border rounded-xl px-3 py-2" placeholder="noreply@thanvasu.com" value="${escapeHtml(f.fromEmail||'')}">
       </label>
       <label class="text-sm">SMTP Host
@@ -316,7 +317,8 @@ async function renderMail() {
     <div class="flex flex-wrap gap-2 mb-6">
       <button id="save-mail" class="pts-btn pts-btn-primary">บันทึกการตั้งค่าอีเมล</button>
     </div>
-    <h3 class="font-bold mb-2">ทดสอบส่ง OTP จริง</h3>
+    <h3 class="font-bold mb-2">ทดสอบส่ง OTP ไปอีเมลใดก็ได้</h3>
+    <p class="text-sm text-on-surface-variant mb-2">ใส่เมลผู้รับทดสอบ (ไม่ต้องเป็นเมล thanvasu) เพื่อยืนยันว่าส่งถึงทุกอีเมลได้</p>
     <div class="flex flex-col sm:flex-row gap-2">
       <input id="m-test-email" class="flex-1 border rounded-xl px-3 py-2" placeholder="อีเมลปลายทางทดสอบ">
       <button id="test-mail" class="pts-btn pts-btn-outline">ส่ง OTP ทดสอบ</button>

@@ -201,7 +201,7 @@ async function issueEmailOtp(email, purpose = 'reset') {
 
     try {
         const sendResult = await sendOtpEmail(normalized, otp, purpose);
-        console.log(`📧 OTP email delivered via ${sendResult.mode} → ${maskEmail(normalized)}`);
+        console.log(`📧 OTP email delivered via ${sendResult.mode} → to=${maskEmail(normalized)} (any user email)`);
         return {
             email: normalized,
             masked: maskEmail(normalized),

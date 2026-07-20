@@ -22,7 +22,10 @@ npm start
 3. สร้าง App Password ที่ https://myaccount.google.com/apppasswords (ต้องเปิดยืนยันตัวตน 2 ขั้นก่อน)
 4. รีสตาร์ท `npm start`
 
-ค่าเริ่มต้นส่งจาก `businessdev@thanvasu.com` แล้ว — เปลี่ยนอีเมลได้ในไฟล์เดียวกัน
+`smtpUser` / `fromEmail` = เมล**ผู้ส่งของระบบ** (กล่องเดียว)  
+OTP จะถูกส่งไปหา**อีเมลของผู้ใช้ทุกคน**ในระบบ เช่น `@gmail.com`, `@hotmail.com`, เมลบริษัท ฯลฯ — ไม่จำกัดแค่เมล thanvasu
+
+ค่าเริ่มต้นผู้ส่ง: `businessdev@thanvasu.com` ผ่าน `smtp.gmail.com`
 
 ### หรือตั้งจากหน้า Admin
 ล็อกอิน admin → `Admin.html` → แท็บ **อีเมล OTP** → บันทึก → ส่งทดสอบ

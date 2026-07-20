@@ -68,12 +68,13 @@ function createProfileRouter({ poolPromise, requireLogin }) {
             if (!result.recordset.length) {
                 return res.status(404).json({ success: false, message: 'ไม่พบผู้ใช้' });
             }
-            const email = result.recordset[0].email;
+            const email = String(result.recordset[0].email || '').trim();
             const issued = await issueEmailOtp(email, 'change_password');
             res.json({
                 success: true,
-                message: `ส่งรหัส OTP ไปที่อีเมล ${issued.masked} แล้ว (หมดอายุใน 5 นาที)`,
+                message: `ส่งรหัส OTP ไปที่อีเมลของคุณ ${issued.masked} แล้ว — ตรวจ inbox/สแปม หมดอายุใน 5 นาที`,
                 masked_email: issued.masked,
+                delivered: issued.delivered,
                 expires_in_seconds: issued.expires_in_seconds
             });
         } catch (error) {

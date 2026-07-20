@@ -1,6 +1,6 @@
 const express = require('express');
 const sql = require('mssql');
-const { writeSecretsFile, readSecretsFile, publicMailStatus } = require('./mailSecrets');
+const { writeSecretsFile, readSecretsFile, readLocalMail, publicMailStatus } = require('./mailSecrets');
 const { issueEmailOtp, getMailStatus } = require('./emailOtp');
 
 function createAdminRouter({ poolPromise, requireLogin }) {
@@ -346,6 +346,7 @@ function createAdminRouter({ poolPromise, requireLogin }) {
     router.get('/mail', async (req, res) => {
         if (!requireAdmin(req, res)) return;
         const secrets = readSecretsFile();
+        const local = readLocalMail();
         res.json({
             success: true,
             status: getMailStatus(),

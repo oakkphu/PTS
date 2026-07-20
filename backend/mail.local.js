@@ -1,28 +1,31 @@
 /**
- * ตั้งค่าส่ง Email OTP จริง — แก้ไฟล์นี้เหมือนตอนใส่รหัส SQL ใน server.js
+ * ตั้งค่าอีเมล "ผู้ส่ง" ของระบบ (SMTP) — แก้ไฟล์นี้เหมือนรหัส SQL ใน server.js
+ *
+ * สำคัญ:
+ * - smtpUser / fromEmail = เมลบริษัทที่ใช้ "ส่งออก" เท่านั้น (1 กล่อง)
+ * - OTP จะถูกส่งไปหาอีเมลของผู้ใช้ทุกคนที่มีในระบบ (Gmail, Hotmail, บริษัท ฯลฯ)
+ *   ไม่จำกัดแค่เมลเดียว
  *
  * thanvasu.com ใช้ Google Workspace → SMTP = smtp.gmail.com
- * ต้องใช้ "App Password" (รหัสผ่านแอป) ไม่ใช่รหัสล็อกอินปกติ
- * สร้างได้ที่: https://myaccount.google.com/apppasswords
- * (ต้องเปิด 2-Step Verification ก่อน)
+ * ใช้ App Password: https://myaccount.google.com/apppasswords
  */
 module.exports = {
     mode: 'smtp',
 
-    // Google Workspace / Gmail SMTP
+    // ช่องทางส่งออก (ผู้ส่งของระบบ)
     smtpHost: 'smtp.gmail.com',
     smtpPort: 587,
     smtpSecure: false,
 
-    // อีเมลบริษัทที่ใช้ส่ง OTP
+    // บัญชี SMTP ที่ใช้ล็อกอินส่งเมล (เมลบริษัท 1 อัน)
     smtpUser: 'businessdev@thanvasu.com',
 
-    // ⚠️ ใส่ App Password 16 ตัว ของ Google ที่นี่ (เว้นวรรคหรือไม่ก็ได้)
+    // ⚠️ ใส่ App Password 16 ตัว ของบัญชีด้านบน
     smtpPass: '',
 
+    // ชื่อ/อีเมลที่ผู้ใช้เห็นในช่อง From
     fromName: 'PTS Learning',
     fromEmail: 'businessdev@thanvasu.com',
 
-    // ถ้ามี Brevo ให้ใส่คีย์ที่นี่แทนได้ (ปล่อยว่างได้)
     brevoApiKey: ''
 };

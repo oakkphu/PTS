@@ -224,11 +224,13 @@ app.post('/api/users/request-otp', async (req, res) => {
             return res.status(404).json({ success: false, message: 'ไม่พบผู้ใช้งานที่ตรงกับอีเมลนี้' });
         }
 
-        const issued = await issueEmailOtp(userCheck.recordset[0].email, 'reset');
+        const userEmail = String(userCheck.recordset[0].email || email).trim();
+        const issued = await issueEmailOtp(userEmail, 'reset');
         res.json({
             success: true,
-            message: `ส่งรหัส OTP ไปที่อีเมล ${issued.masked} แล้ว กรุณาตรวจกล่องจดหมาย (รวมถึงสแปม) — หมดอายุใน 5 นาที`,
+            message: `ส่งรหัส OTP ไปที่อีเมลของผู้ใช้ ${issued.masked} แล้ว (ใช้ได้กับทุกอีเมลที่สมัครในระบบ) — ตรวจ inbox/สแปม หมดอายุใน 5 นาที`,
             masked_email: issued.masked,
+            recipient_email: issued.masked,
             delivered: issued.delivered,
             expires_in_seconds: issued.expires_in_seconds
         });

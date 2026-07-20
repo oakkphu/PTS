@@ -136,7 +136,7 @@
 <img alt="User Profile" class="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida/AP1WRLtzIYU184zJePCq2mE7-nvwDKiy7lZKnTwB8PIhhdygm6F3F2XJpgOVEc2ewjmifgCBf3AYL3_i4w1VA69NtLJg_PMxPn485q444V4n3u8rPRRJfeB34PqTkUr50U6Z0YfauJY18prKwe4761TB3IJ-YZF3Vcm7ygM3mFY5PnqrJYwyrC3MLIGL48QX8UZ-KshQvoHEwpaczEve-p2x64tBTOAhMTL-x3dL_lWawpBRmXhoXiQje0_bvW4">
 </div>
 <div class="overflow-hidden">
-<h1 class="font-headline-sm text-headline-sm font-bold text-on-primary-container leading-tight truncate">คุณ ปลาย</h1>
+<h1 id="dash-sidebar-name" class="font-headline-sm text-headline-sm font-bold text-on-primary-container leading-tight truncate">กำลังโหลด...</h1>
 <p class="text-[10px] text-on-surface-variant truncate">Executive Assistant</p>
 </div>
 </div>
@@ -170,7 +170,7 @@
 <a class="flex items-center gap-sm text-on-surface-variant hover:bg-surface-container-high hover:translate-x-1 rounded-xl px-md py-sm transition-all active:scale-98 mb-xs" href="#">
 <span class="material-symbols-outlined">settings</span>
 <span class="font-label-md text-label-md">ตั้งค่า</span>
-</a><button class="w-full flex items-center gap-sm text-error hover:bg-error-container/20 rounded-xl px-md py-sm transition-all">
+</a><button id="dash-logout" class="w-full flex items-center gap-sm text-error hover:bg-error-container/20 rounded-xl px-md py-sm transition-all">
 <span class="material-symbols-outlined">logout</span>
 <span class="font-label-md text-label-md">ออกจากระบบ</span>
 </button>
@@ -187,9 +187,9 @@
 <div class="flex items-center gap-2"><img src="https://lh3.googleusercontent.com/aida/AP1WRLt-sz504jrNcvfWLeUda4incT1iEaU21RRGLbFll2RyAA6vU5MSNSaRKv9-8BxwZyT5eRXjf-PfbRss04k05K51TK15JrRGFGESsDYnmDobY0oH1UlvYQz9uYU86g3Mtd4l4tmi9HevjdHgKUPk7y4VoGkwVFnUanSfzvq2D8e9Wv4CxCLppw5EXE3dXVB3sGxp4JUfoizfO0fKr3WI5s6b3Bb7FPqR3IFpzekgPHVQXhX2xsdhY2q1Zfph" alt="Personal Assistant Academy Logo" class="h-10 w-auto object-contain"></div>
 </div>
 <nav class="hidden lg:flex items-center gap-md font-body-md text-body-md">
-<a class="text-on-surface-variant hover:text-primary transition-colors" href="#">หน้าแรก</a>
-<a class="text-on-surface-variant hover:text-primary transition-colors" href="#">คอร์สเรียน</a>
-<a class="text-on-surface-variant hover:text-primary transition-colors" href="#">คอมมูนิตี้</a>
+<a class="text-on-surface-variant hover:text-primary transition-colors" href="Home.html">หน้าแรก</a>
+<a class="text-on-surface-variant hover:text-primary transition-colors" href="Courses.html">คอร์สเรียน</a>
+<a class="text-on-surface-variant hover:text-primary transition-colors" href="Community.html">คอมมูนิตี้</a>
 </nav>
 </div>
 <div class="flex items-center gap-sm">
@@ -198,7 +198,7 @@
 </button>
 <div class="flex items-center gap-sm cursor-pointer hover:bg-surface-container-low p-1 rounded-full transition-all">
 <div class="flex flex-col items-end hidden md:flex">
-<span class="text-label-md font-bold text-on-surface">คุณ ปลาย</span>
+<span id="dash-header-name" class="text-label-md font-bold text-on-surface">กำลังโหลด...</span>
 <span class="text-[10px] text-on-surface-variant/60"><span style="color: rgb(151, 66, 88); font-weight: 600; letter-spacing: 0.5px; text-align: right; text-transform: uppercase; background-color: rgba(252, 248, 255, 0.9);" class="">Executive Assistant</span></span>
 </div>
 <img alt="User Profile" class="w-10 h-10 rounded-full border-2 border-primary/20 object-cover" src="https://lh3.googleusercontent.com/aida/AP1WRLuRlQEihIstMfcaCkBnQuwjKoebHnBkf6eAJ0qO6topKT4B7OI3sNS2gqSnhdbrI2mDONZaKH-Lmyt-xsMptOK2yFZ2EI4nPghjirtLlnFKqNapj9bM4TL7LcWwCmIX9HFT2paVcyon_bFYdvJ7A_ytAT2rOuhpQioENuNDvlC1Bz2gvMm-wnfQQckSMai9STrdwaKcpOHQjr03z1cMUZNCH_BbkigqMMYUB0ntPynWtz6jfVtISkgJn3cg">
@@ -424,4 +424,44 @@ Community Feed
 
 
 
+<script>
+document.addEventListener('DOMContentLoaded', async () => {
+    try {
+        const response = await fetch('/api/users/me', { credentials: 'include' });
+        const status = await response.json();
+
+        if (!status.loggedIn || !status.user) {
+            window.location.href = 'Login.html';
+            return;
+        }
+
+        const displayName = status.user.name ? `คุณ ${status.user.name}` : 'คุณผู้ใช้งาน';
+        const sidebarName = document.getElementById('dash-sidebar-name');
+        const headerName = document.getElementById('dash-header-name');
+        if (sidebarName) sidebarName.textContent = displayName;
+        if (headerName) headerName.textContent = displayName;
+
+        const avatar = status.user.Url || `https://ui-avatars.com/api/?name=${encodeURIComponent(status.user.name || 'U')}&background=F8BBD0&color=880E4F&size=128`;
+        document.querySelectorAll('img[alt="User Profile"]').forEach((img) => {
+            img.src = avatar;
+        });
+    } catch (error) {
+        console.error('โหลดข้อมูลผู้ใช้แดชบอร์ดล้มเหลว:', error);
+        window.location.href = 'Login.html';
+    }
+
+    const logoutBtn = document.getElementById('dash-logout');
+    if (logoutBtn) {
+        logoutBtn.addEventListener('click', async () => {
+            if (!confirm('คุณต้องการออกจากระบบใช่หรือไม่?')) return;
+            try {
+                await fetch('/api/users/logout', { method: 'POST', credentials: 'include' });
+            } catch (error) {
+                console.error(error);
+            }
+            window.location.href = 'Home.html';
+        });
+    }
+});
+</script>
 </body></html>

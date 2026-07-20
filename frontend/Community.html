@@ -176,9 +176,19 @@ document.addEventListener('DOMContentLoaded', async () => {
                         <span class="material-symbols-outlined text-[20px]">favorite</span>
                         <span class="font-label-md like-count">${post.like_count || 0}</span>
                     </button>
-                    <div class="flex items-center gap-xs">
+                    <button type="button" class="comment-toggle flex items-center gap-xs hover:text-primary active:scale-95 duration-150" data-post-id="${post.post_id}">
                         <span class="material-symbols-outlined text-[20px]">chat_bubble</span>
-                        <span class="font-label-md">${post.comment_count || 0}</span>
+                        <span class="font-label-md comment-count">${post.comment_count || 0}</span>
+                    </button>
+                </div>
+                <div class="comment-panel hidden mt-md border-t border-outline-variant/20 pt-md" data-post-id="${post.post_id}">
+                    <div class="comment-list flex flex-col gap-sm mb-sm"></div>
+                    <div class="flex gap-sm">
+                        <input type="text" maxlength="1000" placeholder="${currentUser ? 'เขียนคอมเมนต์...' : 'เข้าสู่ระบบเพื่อคอมเมนต์'}"
+                            class="comment-input flex-1 rounded-full border border-outline-variant px-md py-sm text-[14px] outline-none focus:ring-2 focus:ring-primary/20"
+                            ${currentUser ? '' : 'disabled'}>
+                        <button type="button" class="comment-submit px-md py-sm bg-primary text-white rounded-full text-[14px] font-bold disabled:opacity-50"
+                            data-post-id="${post.post_id}" ${currentUser ? '' : 'disabled'}>ส่ง</button>
                     </div>
                 </div>
             </article>
@@ -283,27 +293,116 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     postContainer.addEventListener('click', async (e) => {
         const likeBtn = e.target.closest('.like-btn');
-        if (!likeBtn) return;
+        const commentToggle = e.target.closest('.comment-toggle');
+        const commentSubmit = e.target.closest('.comment-submit');
 
-        if (!currentUser) {
-            alert('กรุณาเข้าสู่ระบบก่อนกดไลก์');
-            window.location.href = 'Login.html';
+        if (likeBtn) {
+            if (!currentUser) {
+                alert('กรุณาเข้าสู่ระบบก่อนกดไลก์');
+                window.location.href = 'Login.html';
+                return;
+            }
+            const postId = likeBtn.getAttribute('data-post-id');
+            try {
+                const response = await fetch(`/api/community/${postId}/like`, {
+                    method: 'POST',
+                    credentials: 'include'
+                });
+                const result = await response.json();
+                if (!response.ok || !result.success) throw new Error(result.message || 'กดไลก์ไม่สำเร็จ');
+                const countEl = likeBtn.querySelector('.like-count');
+                if (countEl) countEl.textContent = result.like_count;
+                likeBtn.classList.toggle('text-primary', result.liked);
+            } catch (error) {
+                alert(error.message);
+            }
             return;
         }
 
-        const postId = likeBtn.getAttribute('data-post-id');
-        try {
-            const response = await fetch(`/api/community/${postId}/like`, {
-                method: 'POST',
-                credentials: 'include'
-            });
-            const result = await response.json();
-            if (!response.ok || !result.success) throw new Error(result.message || 'กดไลก์ไม่สำเร็จ');
-            const countEl = likeBtn.querySelector('.like-count');
-            if (countEl) countEl.textContent = result.like_count;
-            likeBtn.classList.toggle('text-primary', result.liked);
-        } catch (error) {
-            alert(error.message);
+        if (commentToggle) {
+            const postId = commentToggle.getAttribute('data-post-id');
+            const panel = postContainer.querySelector(`.comment-panel[data-post-id="${postId}"]`);
+            if (!panel) return;
+            const opening = panel.classList.contains('hidden');
+            panel.classList.toggle('hidden');
+            if (opening) {
+                const list = panel.querySelector('.comment-list');
+                list.innerHTML = '<div class="text-[14px] text-on-surface-variant">กำลังโหลดคอมเมนต์...</div>';
+                try {
+                    const response = await fetch(`/api/community/${postId}/comments`, { credentials: 'include' });
+                    const result = await response.json();
+                    if (!response.ok || !result.success) throw new Error(result.message || 'โหลดคอมเมนต์ไม่สำเร็จ');
+                    if (!result.data.length) {
+                        list.innerHTML = '<div class="text-[14px] text-on-surface-variant">ยังไม่มีคอมเมนต์</div>';
+                    } else {
+                        list.innerHTML = result.data.map(c => `
+                            <div class="bg-surface-container-low rounded-xl p-sm">
+                                <div class="flex items-center gap-sm mb-xs">
+                                    <img class="w-8 h-8 rounded-full object-cover" src="${c.author_avatar || ''}" alt="">
+                                    <div>
+                                        <p class="text-[14px] font-bold">${escapeHtml(c.author_name || '')}</p>
+                                        <p class="text-[12px] text-on-surface-variant">${timeAgo(c.created_at)}</p>
+                                    </div>
+                                </div>
+                                <p class="text-[14px] text-on-surface-variant whitespace-pre-line">${escapeHtml(c.content || '')}</p>
+                            </div>
+                        `).join('');
+                    }
+                } catch (error) {
+                    list.innerHTML = `<div class="text-[14px] text-error">${escapeHtml(error.message)}</div>`;
+                }
+            }
+            return;
+        }
+
+        if (commentSubmit) {
+            if (!currentUser) {
+                alert('กรุณาเข้าสู่ระบบก่อนคอมเมนต์');
+                window.location.href = 'Login.html';
+                return;
+            }
+            const postId = commentSubmit.getAttribute('data-post-id');
+            const panel = postContainer.querySelector(`.comment-panel[data-post-id="${postId}"]`);
+            const input = panel.querySelector('.comment-input');
+            const content = (input.value || '').trim();
+            if (!content) return;
+
+            commentSubmit.disabled = true;
+            try {
+                const response = await fetch(`/api/community/${postId}/comments`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    credentials: 'include',
+                    body: JSON.stringify({ content })
+                });
+                const result = await response.json();
+                if (!response.ok || !result.success) throw new Error(result.message || 'คอมเมนต์ไม่สำเร็จ');
+                input.value = '';
+                const countEl = postContainer.querySelector(`.comment-toggle[data-post-id="${postId}"] .comment-count`);
+                if (countEl) countEl.textContent = Number(countEl.textContent || 0) + 1;
+                panel.classList.remove('hidden');
+                const list = panel.querySelector('.comment-list');
+                const response2 = await fetch(`/api/community/${postId}/comments`, { credentials: 'include' });
+                const result2 = await response2.json();
+                if (result2.success) {
+                    list.innerHTML = (result2.data || []).map(c => `
+                        <div class="bg-surface-container-low rounded-xl p-sm">
+                            <div class="flex items-center gap-sm mb-xs">
+                                <img class="w-8 h-8 rounded-full object-cover" src="${c.author_avatar || ''}" alt="">
+                                <div>
+                                    <p class="text-[14px] font-bold">${escapeHtml(c.author_name || '')}</p>
+                                    <p class="text-[12px] text-on-surface-variant">${timeAgo(c.created_at)}</p>
+                                </div>
+                            </div>
+                            <p class="text-[14px] text-on-surface-variant whitespace-pre-line">${escapeHtml(c.content || '')}</p>
+                        </div>
+                    `).join('') || '<div class="text-[14px] text-on-surface-variant">ยังไม่มีคอมเมนต์</div>';
+                }
+            } catch (error) {
+                alert(error.message);
+            } finally {
+                commentSubmit.disabled = false;
+            }
         }
     });
 

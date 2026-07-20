@@ -39,14 +39,42 @@ const dbConfig = {
 
 const poolPromise = new sql.ConnectionPool(dbConfig)
     .connect()
-    .then(pool => {
+    .then(async pool => {
         console.log('🔌 Connected to Microsoft SQL Server Successfully!');
+        try {
+            await pool.request().query(`
+                IF NOT EXISTS (SELECT 1 FROM sys.tables WHERE name = 'course_enrollments')
+                BEGIN
+                    CREATE TABLE dbo.course_enrollments (
+                        enrollment_id INT IDENTITY(1,1) NOT NULL PRIMARY KEY,
+                        user_id INT NOT NULL,
+                        course_id INT NOT NULL,
+                        progress_percent INT NOT NULL CONSTRAINT DF_course_enrollments_progress DEFAULT (0),
+                        status VARCHAR(20) NOT NULL CONSTRAINT DF_course_enrollments_status DEFAULT ('in_progress'),
+                        enrolled_at DATETIME NOT NULL CONSTRAINT DF_course_enrollments_enrolled DEFAULT (GETDATE()),
+                        updated_at DATETIME NOT NULL CONSTRAINT DF_course_enrollments_updated DEFAULT (GETDATE()),
+                        CONSTRAINT UQ_course_enrollments_user_course UNIQUE (user_id, course_id)
+                    );
+                END
+            `);
+            console.log('📚 course_enrollments table ready');
+        } catch (schemaErr) {
+            console.error('⚠️ ไม่สามารถเตรียมตาราง course_enrollments ได้:', schemaErr.message);
+        }
         return pool;
     })
     .catch(err => {
         console.error('❌ SQL Server Connection Failed: ', err);
         process.exit(1);
     });
+
+function requireLogin(req, res) {
+    if (!req.session || !req.session.user || !req.session.user.user_id) {
+        res.status(401).json({ success: false, message: 'กรุณาเข้าสู่ระบบก่อนใช้งาน' });
+        return null;
+    }
+    return req.session.user;
+}
 
 // 📦 ตัวเก็บข้อมูล Token สำหรับเช็ก OTP จริงผ่านเครือข่าย
 const smsTokenCache = new Map();
@@ -487,8 +515,242 @@ app.post('/api/community/:postId/like', async (req, res) => {
 });
 
 // =========================================================================
-// 📸 Kiosk: สแกนลงเวลาเข้า-ออก (QR = อีเมลสมาชิก)
+// 💬 คอมเมนต์โพสต์คอมมูนิตี้
 // =========================================================================
+app.get('/api/community/:postId/comments', async (req, res) => {
+    const postId = parseInt(req.params.postId, 10);
+    if (!postId) {
+        return res.status(400).json({ success: false, message: 'รหัสโพสต์ไม่ถูกต้อง' });
+    }
+
+    try {
+        const pool = await poolPromise;
+        const result = await pool.request()
+            .input('postId', sql.Int, postId)
+            .query(`
+                SELECT
+                    c.comment_id,
+                    c.post_id,
+                    c.content,
+                    c.created_at,
+                    u.full_name AS author_name,
+                    ISNULL(u.Url, 'https://ui-avatars.com/api/?name=' + LEFT(u.full_name, 1) + '&background=F8BBD0&color=880E4F&size=128') AS author_avatar
+                FROM BD_PTS.dbo.post_comments c
+                INNER JOIN BD_PTS.dbo.users_main u ON c.user_id = u.user_id
+                WHERE c.post_id = @postId
+                ORDER BY c.created_at ASC
+            `);
+
+        res.json({ success: true, data: result.recordset });
+    } catch (error) {
+        console.error('❌ ดึงคอมเมนต์ล้มเหลว:', error.message);
+        res.status(500).json({ success: false, message: 'ไม่สามารถดึงคอมเมนต์ได้: ' + error.message });
+    }
+});
+
+app.post('/api/community/:postId/comments', async (req, res) => {
+    const user = requireLogin(req, res);
+    if (!user) return;
+
+    const postId = parseInt(req.params.postId, 10);
+    const content = (req.body.content || '').trim();
+    if (!postId) {
+        return res.status(400).json({ success: false, message: 'รหัสโพสต์ไม่ถูกต้อง' });
+    }
+    if (!content) {
+        return res.status(400).json({ success: false, message: 'กรุณากรอกคอมเมนต์' });
+    }
+    if (content.length > 1000) {
+        return res.status(400).json({ success: false, message: 'คอมเมนต์ยาวเกิน 1000 ตัวอักษร' });
+    }
+
+    try {
+        const pool = await poolPromise;
+        const result = await pool.request()
+            .input('postId', sql.Int, postId)
+            .input('userId', sql.Int, user.user_id)
+            .input('content', sql.NVarChar, content)
+            .query(`
+                INSERT INTO BD_PTS.dbo.post_comments (post_id, user_id, content, created_at)
+                OUTPUT INSERTED.comment_id, INSERTED.post_id, INSERTED.content, INSERTED.created_at
+                VALUES (@postId, @userId, @content, GETDATE())
+            `);
+
+        const created = result.recordset[0];
+        res.json({
+            success: true,
+            message: 'คอมเมนต์สำเร็จ',
+            data: {
+                ...created,
+                author_name: user.name,
+                author_avatar: user.Url || null
+            }
+        });
+    } catch (error) {
+        console.error('❌ เพิ่มคอมเมนต์ล้มเหลว:', error.message);
+        res.status(500).json({ success: false, message: 'ไม่สามารถคอมเมนต์ได้: ' + error.message });
+    }
+});
+
+// =========================================================================
+// 📘 สมัครเรียน / คอร์สของฉัน
+// =========================================================================
+app.post('/api/courses/:courseId/enroll', async (req, res) => {
+    const user = requireLogin(req, res);
+    if (!user) return;
+
+    const courseId = parseInt(req.params.courseId, 10);
+    if (!courseId) {
+        return res.status(400).json({ success: false, message: 'รหัสคอร์สไม่ถูกต้อง' });
+    }
+
+    try {
+        const pool = await poolPromise;
+
+        const courseCheck = await pool.request()
+            .input('courseId', sql.Int, courseId)
+            .query('SELECT course_id, course_name FROM BD_PTS.dbo.courses_main WHERE course_id = @courseId');
+
+        if (courseCheck.recordset.length === 0) {
+            return res.status(404).json({ success: false, message: 'ไม่พบคอร์สนี้ในระบบ' });
+        }
+
+        const existing = await pool.request()
+            .input('userId', sql.Int, user.user_id)
+            .input('courseId', sql.Int, courseId)
+            .query(`
+                SELECT enrollment_id FROM BD_PTS.dbo.course_enrollments
+                WHERE user_id = @userId AND course_id = @courseId
+            `);
+
+        if (existing.recordset.length > 0) {
+            return res.json({
+                success: true,
+                already_enrolled: true,
+                message: 'คุณสมัครคอร์สนี้ไว้แล้ว',
+                enrollment_id: existing.recordset[0].enrollment_id
+            });
+        }
+
+        const inserted = await pool.request()
+            .input('userId', sql.Int, user.user_id)
+            .input('courseId', sql.Int, courseId)
+            .query(`
+                INSERT INTO BD_PTS.dbo.course_enrollments (user_id, course_id, progress_percent, status)
+                OUTPUT INSERTED.enrollment_id
+                VALUES (@userId, @courseId, 0, 'in_progress')
+            `);
+
+        res.json({
+            success: true,
+            already_enrolled: false,
+            message: `สมัครเรียน "${courseCheck.recordset[0].course_name}" สำเร็จ`,
+            enrollment_id: inserted.recordset[0].enrollment_id
+        });
+    } catch (error) {
+        console.error('❌ สมัครเรียนล้มเหลว:', error.message);
+        res.status(500).json({ success: false, message: 'ไม่สามารถสมัครเรียนได้: ' + error.message });
+    }
+});
+
+app.get('/api/my/courses', async (req, res) => {
+    const user = requireLogin(req, res);
+    if (!user) return;
+
+    try {
+        const pool = await poolPromise;
+        const result = await pool.request()
+            .input('userId', sql.Int, user.user_id)
+            .query(`
+                SELECT
+                    e.enrollment_id,
+                    e.progress_percent,
+                    e.status,
+                    e.enrolled_at,
+                    e.updated_at,
+                    c.course_id,
+                    c.course_name,
+                    c.instructor_name,
+                    c.delivery_mode,
+                    c.difficulty_level,
+                    c.total_hours,
+                    c.cover_image_url,
+                    c.average_rating
+                FROM BD_PTS.dbo.course_enrollments e
+                INNER JOIN BD_PTS.dbo.courses_main c ON e.course_id = c.course_id
+                WHERE e.user_id = @userId
+                ORDER BY e.updated_at DESC
+            `);
+
+        const courses = result.recordset;
+        const inProgress = courses.filter(c => c.status === 'in_progress');
+        const completed = courses.filter(c => c.status === 'completed');
+        const avgProgress = courses.length
+            ? Math.round(courses.reduce((sum, c) => sum + Number(c.progress_percent || 0), 0) / courses.length)
+            : 0;
+        const totalHours = courses.reduce((sum, c) => sum + Number(c.total_hours || 0), 0);
+
+        res.json({
+            success: true,
+            data: courses,
+            summary: {
+                total: courses.length,
+                in_progress: inProgress.length,
+                completed: completed.length,
+                average_progress: avgProgress,
+                total_hours: totalHours
+            }
+        });
+    } catch (error) {
+        console.error('❌ ดึงคอร์สของฉันล้มเหลว:', error.message);
+        res.status(500).json({ success: false, message: 'ไม่สามารถดึงคอร์สของฉันได้: ' + error.message });
+    }
+});
+
+app.patch('/api/my/courses/:courseId/progress', async (req, res) => {
+    const user = requireLogin(req, res);
+    if (!user) return;
+
+    const courseId = parseInt(req.params.courseId, 10);
+    let progress = parseInt(req.body.progress_percent, 10);
+    if (!courseId || Number.isNaN(progress)) {
+        return res.status(400).json({ success: false, message: 'ข้อมูลความคืบหน้าไม่ถูกต้อง' });
+    }
+    progress = Math.max(0, Math.min(100, progress));
+    const status = progress >= 100 ? 'completed' : 'in_progress';
+
+    try {
+        const pool = await poolPromise;
+        const result = await pool.request()
+            .input('userId', sql.Int, user.user_id)
+            .input('courseId', sql.Int, courseId)
+            .input('progress', sql.Int, progress)
+            .input('status', sql.VarChar, status)
+            .query(`
+                UPDATE BD_PTS.dbo.course_enrollments
+                SET progress_percent = @progress,
+                    status = @status,
+                    updated_at = GETDATE()
+                WHERE user_id = @userId AND course_id = @courseId;
+
+                SELECT @@ROWCOUNT AS affected;
+            `);
+
+        if (!result.recordset[0] || result.recordset[0].affected === 0) {
+            return res.status(404).json({ success: false, message: 'ยังไม่ได้สมัครคอร์สนี้' });
+        }
+
+        res.json({ success: true, message: 'อัปเดตความคืบหน้าแล้ว', progress_percent: progress, status });
+    } catch (error) {
+        console.error('❌ อัปเดตความคืบหน้าล้มเหลว:', error.message);
+        res.status(500).json({ success: false, message: error.message });
+    }
+});
+
+// -------------------------------------------------------------------------
+// 📸 Kiosk จำลอง: หน้า frontend/kiosk.html เป็นตัวทดสอบเท่านั้น
+// เครื่อง Kiosk จริงให้ POST มาที่ endpoint นี้ด้วย payload เดียวกัน
+// -------------------------------------------------------------------------
 app.post('/api/attendance/scan', async (req, res) => {
     const { employee_id, kiosk_device_id } = req.body;
 

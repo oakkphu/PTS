@@ -55,9 +55,13 @@ const poolPromise = new sql.ConnectionPool(dbConfig)
         }
         const mail = getMailStatus();
         if (mail.ready) {
-            console.log(`📧 Email OTP ready (from ${mail.fromEmail || '-'})`);
+            console.log(`📧 Email OTP ready → ส่งจาก ${mail.fromEmail || '-'} ผ่าน ${mail.smtpHost || mail.mode}`);
         } else {
-            console.warn('⚠️ Email OTP ยังไม่พร้อม — ตั้งค่าที่ Admin → อีเมล OTP หรือไฟล์ .env / backend/mail.secrets.json');
+            console.warn('⚠️ Email OTP ยังไม่พร้อม');
+            console.warn('   thanvasu.com ใช้ Google Workspace');
+            console.warn('   1) เปิด https://myaccount.google.com/apppasswords สร้าง App Password');
+            console.warn('   2) ใส่รหัส 16 ตัวใน backend/mail.local.js ที่ช่อง smtpPass');
+            console.warn('   หรือตั้งผ่าน Admin → แท็บ อีเมล OTP แล้วกดทดสอบส่ง');
         }
         return pool;
     })

@@ -105,9 +105,8 @@ async function sendViaBrevo(settings, to, otp, purpose) {
 }
 
 async function sendViaSmtp(settings, to, otp, purpose) {
-    const transporter = createTransporter(settings);
-    if (!transporter) {
-        const err = new Error('ยังไม่ได้ตั้งค่า SMTP (โฮสต์ / อีเมล / รหัสผ่าน)');
+    if (!hasSmtpConfig(settings)) {
+        const err = new Error('ยังไม่ได้ตั้งค่า SMTP — ใส่ App Password ที่ backend/mail.local.js (smtpPass)');
         err.code = 'SMTP_NOT_CONFIGURED';
         throw err;
     }
@@ -118,6 +117,28 @@ async function sendViaSmtp(settings, to, otp, purpose) {
         throw err;
     }
     const { subject, text, html } = buildOtpContent(otp, purpose);
+
+    const isGmail = /gmail\.com$/i.test(settings.smtp.host) || /gmail\.com$/i.test(settings.smtp.user);
+    const transporter = nodemailer.createTransport(
+        isGmail
+            ? {
+                service: 'gmail',
+                auth: {
+                    user: settings.smtp.user,
+                    pass: String(settings.smtp.pass).replace(/\s+/g, '')
+                }
+            }
+            : {
+                host: settings.smtp.host,
+                port: settings.smtp.port,
+                secure: !!settings.smtp.secure,
+                auth: {
+                    user: settings.smtp.user,
+                    pass: String(settings.smtp.pass).replace(/\s+/g, '')
+                }
+            }
+    );
+
     const info = await transporter.sendMail({
         from: from.formatted,
         to,
@@ -125,7 +146,7 @@ async function sendViaSmtp(settings, to, otp, purpose) {
         text,
         html
     });
-    return { delivered: true, mode: 'smtp', messageId: info.messageId || null };
+    return { delivered: true, mode: isGmail ? 'gmail' : 'smtp', messageId: info.messageId || null };
 }
 
 async function sendOtpEmail(to, otp, purpose) {

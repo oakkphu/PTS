@@ -13,40 +13,26 @@ npm start
 
 ## ส่ง Email OTP จริง (สำคัญ)
 
-ระบบ**บังคับส่ง OTP เข้าอีเมลจริง** — ไม่ใช้ mock
+`thanvasu.com` ใช้ **Google Workspace** → ส่งผ่าน `smtp.gmail.com`
 
-ตั้งค่าอย่างใดอย่างหนึ่ง:
+### วิธีเร็วสุด (แก้ไฟล์เดียว เหมือนรหัส SQL)
 
-### วิธีที่ 1 — จากหน้า Admin (แนะนำ)
-1. ล็อกอินด้วยบัญชี `Role = admin`
-2. เปิด `Admin.html` → แท็บ **อีเมล OTP**
-3. กรอก SMTP (เช่น Office 365 / Gmail App Password) หรือ Brevo API Key
-4. กด **บันทึก** แล้ว **ส่ง OTP ทดสอบ** ไปอีเมลตัวเอง
+1. เปิด `backend/mail.local.js`
+2. ใส่ **App Password** ของ Google ในช่อง `smtpPass`
+3. สร้าง App Password ที่ https://myaccount.google.com/apppasswords (ต้องเปิดยืนยันตัวตน 2 ขั้นก่อน)
+4. รีสตาร์ท `npm start`
 
-### วิธีที่ 2 — ไฟล์ `.env`
-คัดลอก `.env.example` เป็น `.env` แล้วกรอกค่า:
+ค่าเริ่มต้นส่งจาก `businessdev@thanvasu.com` แล้ว — เปลี่ยนอีเมลได้ในไฟล์เดียวกัน
 
+### หรือตั้งจากหน้า Admin
+ล็อกอิน admin → `Admin.html` → แท็บ **อีเมล OTP** → บันทึก → ส่งทดสอบ
+
+### หรือใช้ `.env`
 ```bash
 cp .env.example .env
+# แก้ SMTP_PASS แล้ว npm start
 ```
 
-```env
-SMTP_HOST=smtp.office365.com
-SMTP_PORT=587
-SMTP_USER=your@thanvasu.com
-SMTP_PASS=your-password
-MAIL_FROM_EMAIL=your@thanvasu.com
-MAIL_FROM_NAME=PTS Learning
-```
-
-หรือใช้ Brevo:
-
-```env
-BREVO_API_KEY=xkeysib-xxxx
-MAIL_FROM_EMAIL=verified-sender@yourdomain.com
-```
-
-ค่าที่บันทึกจาก Admin อยู่ใน `backend/mail.secrets.json` (ไม่ commit ขึ้น git)
 
 ## โครงสร้างหลัก
 

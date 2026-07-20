@@ -350,15 +350,15 @@ function createAdminRouter({ poolPromise, requireLogin }) {
             success: true,
             status: getMailStatus(),
             form: {
-                mode: secrets.mode || 'auto',
-                smtpHost: secrets.smtpHost || 'smtp.office365.com',
-                smtpPort: secrets.smtpPort || 587,
-                smtpSecure: !!secrets.smtpSecure,
-                smtpUser: secrets.smtpUser || '',
-                fromName: secrets.fromName || 'PTS Learning',
-                fromEmail: secrets.fromEmail || '',
-                hasSmtpPass: !!secrets.smtpPass,
-                hasBrevoKey: !!secrets.brevoApiKey
+                mode: secrets.mode || local.mode || 'smtp',
+                smtpHost: secrets.smtpHost || local.smtpHost || 'smtp.gmail.com',
+                smtpPort: secrets.smtpPort || local.smtpPort || 587,
+                smtpSecure: !!(secrets.smtpSecure || local.smtpSecure),
+                smtpUser: secrets.smtpUser || local.smtpUser || '',
+                fromName: secrets.fromName || local.fromName || 'PTS Learning',
+                fromEmail: secrets.fromEmail || local.fromEmail || '',
+                hasSmtpPass: !!(secrets.smtpPass || local.smtpPass),
+                hasBrevoKey: !!(secrets.brevoApiKey || local.brevoApiKey)
             }
         });
     });

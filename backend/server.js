@@ -10,7 +10,8 @@ const { createLearningRouter } = require('./learningRoutes');
 const { createAdminRouter } = require('./adminRoutes');
 const { createProfileRouter } = require('./profileRoutes');
 const { createGoogleCalendarRouter } = require('./googleCalendarRoutes');
-const { syncAfterEnroll } = require('./googleCalendar');
+const googleCalendar = require('./googleCalendar');
+const { syncAfterEnroll } = googleCalendar;
 const { issueEmailOtp, verifyEmailOtp, getMailStatus } = require('./emailOtp');
 const { writeSecretsFile } = require('./mailSecrets');
 

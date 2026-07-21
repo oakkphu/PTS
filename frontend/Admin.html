@@ -34,13 +34,14 @@
   <section class="pts-page-hero">
     <span class="pts-chip mb-3">Admin</span>
     <h1 class="text-3xl md:text-4xl font-bold text-primary mb-2 pts-display">แผงควบคุมแอดมิน</h1>
-    <p class="text-on-surface-variant">จัดการคอร์ส บทเรียน ตารางเรียน ผู้ใช้ โพสต์ การชำระเงิน และการส่งอีเมล OTP</p>
+    <p class="text-on-surface-variant">จัดการคอร์ส บทเรียน ตารางเรียน ผู้ใช้ โพสต์ การชำระเงิน แบนเนอร์หน้าแรก และการส่งอีเมล OTP</p>
   </section>
   <div id="stats" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3 mb-6"></div>
   <div class="flex flex-wrap gap-2 mb-4">
     <button class="tab-btn active px-4 py-2 rounded-full border text-sm font-bold" data-tab="courses">คอร์ส</button>
     <button class="tab-btn px-4 py-2 rounded-full border text-sm font-bold" data-tab="lessons">บทเรียน</button>
     <button class="tab-btn px-4 py-2 rounded-full border text-sm font-bold" data-tab="schedules">ตารางเรียน</button>
+    <button class="tab-btn px-4 py-2 rounded-full border text-sm font-bold" data-tab="banners">แบนเนอร์</button>
     <button class="tab-btn px-4 py-2 rounded-full border text-sm font-bold" data-tab="users">ผู้ใช้</button>
     <button class="tab-btn px-4 py-2 rounded-full border text-sm font-bold" data-tab="posts">โพสต์</button>
     <button class="tab-btn px-4 py-2 rounded-full border text-sm font-bold" data-tab="payments">ชำระเงิน</button>
@@ -263,6 +264,146 @@ async function renderSchedules() {
   });
 }
 
+async function renderBanners() {
+  const { data } = await api('/api/admin/hero-slides');
+  const iconOptions = [
+    'check_circle', 'schedule', 'workspace_premium', 'school', 'star', 'verified',
+    'auto_awesome', 'groups', 'event', 'menu_book', 'psychology', 'handshake'
+  ];
+
+  const formHtml = (s = {}) => `
+    <input type="hidden" id="b-id" value="${s.slide_id || ''}">
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-3 mb-3">
+      <input id="b-sort" type="number" class="border rounded-xl px-3 py-2" placeholder="ลำดับ" value="${s.sort_order || data.length + 1}">
+      <input id="b-eyebrow" class="border rounded-xl px-3 py-2" placeholder="ข้อความเล็กเหนือหัวข้อ" value="${escapeHtml(s.eyebrow || '')}">
+      <input id="b-title" class="border rounded-xl px-3 py-2 md:col-span-2" placeholder="หัวข้อหลัก *" value="${escapeHtml(s.title || '')}">
+      <input id="b-highlight" class="border rounded-xl px-3 py-2 md:col-span-2" placeholder="คำในหัวข้อที่อยากไฮไลต์สี (ต้องตรงกับข้อความในหัวข้อ)" value="${escapeHtml(s.title_highlight || '')}">
+      <textarea id="b-lead" class="border rounded-xl px-3 py-2 md:col-span-2" rows="2" placeholder="คำอธิบายสั้น">${escapeHtml(s.lead || '')}</textarea>
+      <input id="b-cta1-label" class="border rounded-xl px-3 py-2" placeholder="ปุ่มหลัก — ข้อความ" value="${escapeHtml(s.cta_primary_label || '')}">
+      <input id="b-cta1-href" class="border rounded-xl px-3 py-2" placeholder="ปุ่มหลัก — ลิงก์ เช่น Courses.html" value="${escapeHtml(s.cta_primary_href || '')}">
+      <input id="b-cta2-label" class="border rounded-xl px-3 py-2" placeholder="ปุ่มรอง — ข้อความ" value="${escapeHtml(s.cta_secondary_label || '')}">
+      <input id="b-cta2-href" class="border rounded-xl px-3 py-2" placeholder="ปุ่มรอง — ลิงก์ เช่น Register.html" value="${escapeHtml(s.cta_secondary_href || '')}">
+      <input id="b-image" class="border rounded-xl px-3 py-2 md:col-span-2" placeholder="URL รูป (หรืออัปโหลดด้านล่าง)" value="${escapeHtml(s.image_url || '')}">
+      <div class="md:col-span-2 flex flex-wrap items-center gap-2">
+        <input id="b-file" type="file" accept="image/jpeg,image/png,image/webp,image/gif" class="text-sm">
+        <button type="button" id="b-upload" class="border px-3 py-1.5 rounded-full text-sm font-bold">อัปโหลดรูป</button>
+        <span id="b-upload-msg" class="text-xs text-on-surface-variant"></span>
+      </div>
+      <input id="b-alt" class="border rounded-xl px-3 py-2 md:col-span-2" placeholder="คำอธิบายรูป (alt)" value="${escapeHtml(s.image_alt || '')}">
+      <select id="b-icon" class="border rounded-xl px-3 py-2">${iconOptions.map(i => `<option value="${i}" ${s.badge_icon === i ? 'selected' : ''}>${i}</option>`).join('')}</select>
+      <input id="b-badge-title" class="border rounded-xl px-3 py-2" placeholder="ข้อความแบดจ์ เช่น Certificate" value="${escapeHtml(s.badge_title || '')}">
+      <input id="b-badge-sub" class="border rounded-xl px-3 py-2 md:col-span-2" placeholder="คำอธิบายใต้แบดจ์" value="${escapeHtml(s.badge_subtitle || '')}">
+      <label class="flex items-center gap-2 text-sm md:col-span-2"><input id="b-active" type="checkbox" ${s.flag_use === 0 || s.flag_use === false ? '' : 'checked'}> แสดงบนหน้าแรก</label>
+    </div>
+    <div class="flex flex-wrap gap-2 mb-6">
+      <button type="button" id="b-save" class="bg-primary text-white px-5 py-2 rounded-full font-bold">${s.slide_id ? 'บันทึกการแก้ไข' : 'เพิ่มแบนเนอร์'}</button>
+      ${s.slide_id ? '<button type="button" id="b-cancel" class="border px-5 py-2 rounded-full font-bold">ยกเลิกแก้ไข</button>' : ''}
+    </div>
+    <p id="b-msg" class="text-sm mb-4"></p>
+  `;
+
+  document.getElementById('panel').innerHTML = `
+    <h2 class="font-bold text-lg mb-1" id="b-form-title">เพิ่มแบนเนอร์หน้าแรก</h2>
+    <p class="text-sm text-on-surface-variant mb-4">สไลด์ที่เปิดใช้จะหมุนบนหน้าแรกตามลำดับ</p>
+    <div id="b-form">${formHtml()}</div>
+    <h3 class="font-bold mb-2">รายการแบนเนอร์</h3>
+    <div class="space-y-3">${data.map(s => `
+      <div class="border rounded-xl p-3 flex flex-col md:flex-row gap-3 ${s.flag_use ? '' : 'opacity-50'}">
+        <img src="${escapeHtml(s.image_url || '')}" alt="" class="w-full md:w-36 h-24 object-cover rounded-lg bg-gray-100" onerror="this.style.display='none'">
+        <div class="flex-1 min-w-0">
+          <p class="text-xs text-on-surface-variant">ลำดับ ${s.sort_order} · #${s.slide_id} · ${s.flag_use ? 'แสดง' : 'ซ่อน'}</p>
+          <p class="font-bold truncate">${escapeHtml(s.eyebrow || '')}</p>
+          <p class="text-sm">${escapeHtml(s.title)}</p>
+        </div>
+        <div class="flex gap-2 shrink-0">
+          <button class="edit-banner border px-3 py-1 rounded-full text-sm font-bold" data-id="${s.slide_id}">แก้ไข</button>
+          ${s.flag_use ? `<button class="hide-banner text-red-600 font-bold text-sm" data-id="${s.slide_id}">ซ่อน</button>` : ''}
+        </div>
+      </div>`).join('') || '<p>ยังไม่มีแบนเนอร์</p>'}
+    </div>
+  `;
+
+  const readForm = () => ({
+    sort_order: Number(document.getElementById('b-sort').value || 1),
+    eyebrow: document.getElementById('b-eyebrow').value,
+    title: document.getElementById('b-title').value,
+    title_highlight: document.getElementById('b-highlight').value,
+    lead: document.getElementById('b-lead').value,
+    cta_primary_label: document.getElementById('b-cta1-label').value,
+    cta_primary_href: document.getElementById('b-cta1-href').value,
+    cta_secondary_label: document.getElementById('b-cta2-label').value,
+    cta_secondary_href: document.getElementById('b-cta2-href').value,
+    image_url: document.getElementById('b-image').value,
+    image_alt: document.getElementById('b-alt').value,
+    badge_icon: document.getElementById('b-icon').value,
+    badge_title: document.getElementById('b-badge-title').value,
+    badge_subtitle: document.getElementById('b-badge-sub').value,
+    flag_use: document.getElementById('b-active').checked
+  });
+
+  const wireForm = () => {
+    document.getElementById('b-upload').onclick = async () => {
+      const file = document.getElementById('b-file').files?.[0];
+      const msg = document.getElementById('b-upload-msg');
+      if (!file) { msg.textContent = 'เลือกไฟล์ก่อน'; return; }
+      msg.textContent = 'กำลังอัปโหลด...';
+      try {
+        const fd = new FormData();
+        fd.append('image', file);
+        const res = await fetch('/api/admin/hero-slides/upload', { method: 'POST', credentials: 'include', body: fd });
+        const json = await res.json().catch(() => ({}));
+        if (!res.ok || json.success === false) throw new Error(json.message || 'อัปโหลดไม่สำเร็จ');
+        document.getElementById('b-image').value = json.url;
+        msg.textContent = 'อัปโหลดแล้ว';
+      } catch (e) {
+        msg.textContent = e.message;
+      }
+    };
+
+    document.getElementById('b-save').onclick = async () => {
+      const msg = document.getElementById('b-msg');
+      const id = document.getElementById('b-id').value;
+      const payload = readForm();
+      try {
+        if (!payload.title.trim()) throw new Error('กรุณาระบุหัวข้อแบนเนอร์');
+        if (id) {
+          await api(`/api/admin/hero-slides/${id}`, { method: 'PUT', body: JSON.stringify(payload) });
+        } else {
+          await api('/api/admin/hero-slides', { method: 'POST', body: JSON.stringify(payload) });
+        }
+        msg.className = 'text-sm mb-4 text-emerald-700';
+        msg.textContent = 'บันทึกแล้ว';
+        renderBanners();
+      } catch (e) {
+        msg.className = 'text-sm mb-4 text-red-600';
+        msg.textContent = e.message;
+      }
+    };
+
+    document.getElementById('b-cancel')?.addEventListener('click', () => renderBanners());
+  };
+
+  wireForm();
+
+  document.querySelectorAll('.edit-banner').forEach(btn => {
+    btn.onclick = () => {
+      const slide = data.find(s => String(s.slide_id) === btn.dataset.id);
+      if (!slide) return;
+      document.getElementById('b-form-title').textContent = `แก้ไขแบนเนอร์ #${slide.slide_id}`;
+      document.getElementById('b-form').innerHTML = formHtml(slide);
+      wireForm();
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    };
+  });
+
+  document.querySelectorAll('.hide-banner').forEach(btn => {
+    btn.onclick = async () => {
+      await api(`/api/admin/hero-slides/${btn.dataset.id}`, { method: 'DELETE' });
+      renderBanners();
+    };
+  });
+}
+
 async function renderUsers() {
   const { data } = await api('/api/admin/users');
   document.getElementById('panel').innerHTML = `
@@ -424,6 +565,7 @@ const tabs = {
   courses: renderCourses,
   lessons: renderLessons,
   schedules: renderSchedules,
+  banners: renderBanners,
   users: renderUsers,
   posts: renderPosts,
   payments: renderPayments,

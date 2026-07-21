@@ -401,6 +401,25 @@ function createLearningRouter({ poolPromise, requireLogin }) {
         }
     });
 
+    // แบนเนอร์หน้าแรก (สาธารณะ)
+    router.get('/hero-slides', async (_req, res) => {
+        try {
+            const pool = await poolPromise;
+            const result = await pool.request().query(`
+                SELECT
+                    slide_id, sort_order, eyebrow, title, title_highlight, lead,
+                    cta_primary_label, cta_primary_href, cta_secondary_label, cta_secondary_href,
+                    image_url, image_alt, badge_icon, badge_title, badge_subtitle
+                FROM BD_PTS.dbo.hero_slides
+                WHERE flag_use = 1
+                ORDER BY sort_order ASC, slide_id ASC
+            `);
+            res.json({ success: true, data: result.recordset });
+        } catch (error) {
+            res.status(500).json({ success: false, message: error.message });
+        }
+    });
+
     return router;
 }
 

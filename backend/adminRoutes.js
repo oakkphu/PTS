@@ -1,8 +1,83 @@
 const express = require('express');
 const sql = require('mssql');
+const path = require('path');
+const fs = require('fs');
+const multer = require('multer');
 const { writeSecretsFile, readSecretsFile, readLocalMail, publicMailStatus } = require('./mailSecrets');
 const { issueEmailOtp, getMailStatus } = require('./emailOtp');
 const { syncScheduleToEnrolledUsers, removeScheduleFromAllCalendars } = require('./googleCalendar');
+
+const HERO_DIR = path.join(__dirname, '..', 'uploads', 'hero');
+const HERO_MIME = new Set(['image/jpeg', 'image/png', 'image/webp', 'image/gif']);
+const HERO_ICONS = new Set([
+    'check_circle', 'schedule', 'workspace_premium', 'school', 'star', 'verified',
+    'auto_awesome', 'groups', 'event', 'menu_book', 'psychology', 'handshake'
+]);
+
+function ensureHeroDir() {
+    fs.mkdirSync(HERO_DIR, { recursive: true });
+}
+
+const heroUpload = multer({
+    storage: multer.diskStorage({
+        destination: (_req, _file, cb) => {
+            ensureHeroDir();
+            cb(null, HERO_DIR);
+        },
+        filename: (_req, file, cb) => {
+            const ext = path.extname(file.originalname || '').toLowerCase();
+            const safeExt = ['.jpg', '.jpeg', '.png', '.webp', '.gif'].includes(ext)
+                ? (ext === '.jpeg' ? '.jpg' : ext)
+                : '.jpg';
+            cb(null, `hero-${Date.now()}${safeExt}`);
+        }
+    }),
+    limits: { fileSize: 5 * 1024 * 1024 },
+    fileFilter: (_req, file, cb) => {
+        if (HERO_MIME.has(String(file.mimetype || '').toLowerCase())) cb(null, true);
+        else cb(new Error('รองรับเฉพาะไฟล์รูป JPG, PNG, WEBP หรือ GIF'));
+    }
+});
+
+function normalizeHeroBody(body = {}) {
+    const icon = String(body.badge_icon || '').trim() || 'check_circle';
+    return {
+        sort_order: Math.max(1, parseInt(body.sort_order, 10) || 1),
+        eyebrow: String(body.eyebrow || '').trim() || null,
+        title: String(body.title || '').trim(),
+        title_highlight: String(body.title_highlight || '').trim() || null,
+        lead: String(body.lead || '').trim() || null,
+        cta_primary_label: String(body.cta_primary_label || '').trim() || null,
+        cta_primary_href: String(body.cta_primary_href || '').trim() || null,
+        cta_secondary_label: String(body.cta_secondary_label || '').trim() || null,
+        cta_secondary_href: String(body.cta_secondary_href || '').trim() || null,
+        image_url: String(body.image_url || '').trim() || null,
+        image_alt: String(body.image_alt || '').trim() || null,
+        badge_icon: HERO_ICONS.has(icon) ? icon : 'check_circle',
+        badge_title: String(body.badge_title || '').trim() || null,
+        badge_subtitle: String(body.badge_subtitle || '').trim() || null,
+        flag_use: body.flag_use === false || body.flag_use === 0 || body.flag_use === '0' ? 0 : 1
+    };
+}
+
+function bindHeroInputs(request, data) {
+    return request
+        .input('sort_order', sql.Int, data.sort_order)
+        .input('eyebrow', sql.NVarChar, data.eyebrow)
+        .input('title', sql.NVarChar, data.title)
+        .input('title_highlight', sql.NVarChar, data.title_highlight)
+        .input('lead', sql.NVarChar, data.lead)
+        .input('cta_primary_label', sql.NVarChar, data.cta_primary_label)
+        .input('cta_primary_href', sql.NVarChar, data.cta_primary_href)
+        .input('cta_secondary_label', sql.NVarChar, data.cta_secondary_label)
+        .input('cta_secondary_href', sql.NVarChar, data.cta_secondary_href)
+        .input('image_url', sql.NVarChar, data.image_url)
+        .input('image_alt', sql.NVarChar, data.image_alt)
+        .input('badge_icon', sql.NVarChar, data.badge_icon)
+        .input('badge_title', sql.NVarChar, data.badge_title)
+        .input('badge_subtitle', sql.NVarChar, data.badge_subtitle)
+        .input('flag_use', sql.Bit, data.flag_use);
+}
 
 function createAdminRouter({ poolPromise, requireLogin }) {
     const router = express.Router();
@@ -347,6 +422,126 @@ function createAdminRouter({ poolPromise, requireLogin }) {
         } catch (error) {
             res.status(500).json({ success: false, message: error.message });
         }
+    });
+
+    // —— Home hero slides ——
+    router.get('/hero-slides', async (req, res) => {
+        if (!requireAdmin(req, res)) return;
+        try {
+            const pool = await poolPromise;
+            const result = await pool.request().query(`
+                SELECT
+                    slide_id, sort_order, eyebrow, title, title_highlight, lead,
+                    cta_primary_label, cta_primary_href, cta_secondary_label, cta_secondary_href,
+                    image_url, image_alt, badge_icon, badge_title, badge_subtitle,
+                    flag_use, created_at, updated_at
+                FROM BD_PTS.dbo.hero_slides
+                ORDER BY sort_order ASC, slide_id ASC
+            `);
+            res.json({ success: true, data: result.recordset });
+        } catch (error) {
+            res.status(500).json({ success: false, message: error.message });
+        }
+    });
+
+    router.post('/hero-slides', async (req, res) => {
+        if (!requireAdmin(req, res)) return;
+        const data = normalizeHeroBody(req.body);
+        if (!data.title) {
+            return res.status(400).json({ success: false, message: 'กรุณาระบุหัวข้อแบนเนอร์' });
+        }
+        try {
+            const pool = await poolPromise;
+            const result = await bindHeroInputs(pool.request(), data).query(`
+                INSERT INTO BD_PTS.dbo.hero_slides (
+                    sort_order, eyebrow, title, title_highlight, lead,
+                    cta_primary_label, cta_primary_href, cta_secondary_label, cta_secondary_href,
+                    image_url, image_alt, badge_icon, badge_title, badge_subtitle, flag_use
+                )
+                OUTPUT INSERTED.slide_id
+                VALUES (
+                    @sort_order, @eyebrow, @title, @title_highlight, @lead,
+                    @cta_primary_label, @cta_primary_href, @cta_secondary_label, @cta_secondary_href,
+                    @image_url, @image_alt, @badge_icon, @badge_title, @badge_subtitle, @flag_use
+                )
+            `);
+            res.json({ success: true, message: 'เพิ่มแบนเนอร์แล้ว', data: result.recordset[0] });
+        } catch (error) {
+            res.status(500).json({ success: false, message: error.message });
+        }
+    });
+
+    router.put('/hero-slides/:slideId', async (req, res) => {
+        if (!requireAdmin(req, res)) return;
+        const slideId = parseInt(req.params.slideId, 10);
+        if (!slideId) return res.status(400).json({ success: false, message: 'รหัสแบนเนอร์ไม่ถูกต้อง' });
+        const data = normalizeHeroBody(req.body);
+        if (!data.title) {
+            return res.status(400).json({ success: false, message: 'กรุณาระบุหัวข้อแบนเนอร์' });
+        }
+        try {
+            const pool = await poolPromise;
+            const result = await bindHeroInputs(pool.request(), data)
+                .input('slideId', sql.Int, slideId)
+                .query(`
+                    UPDATE BD_PTS.dbo.hero_slides
+                    SET sort_order = @sort_order,
+                        eyebrow = @eyebrow,
+                        title = @title,
+                        title_highlight = @title_highlight,
+                        lead = @lead,
+                        cta_primary_label = @cta_primary_label,
+                        cta_primary_href = @cta_primary_href,
+                        cta_secondary_label = @cta_secondary_label,
+                        cta_secondary_href = @cta_secondary_href,
+                        image_url = @image_url,
+                        image_alt = @image_alt,
+                        badge_icon = @badge_icon,
+                        badge_title = @badge_title,
+                        badge_subtitle = @badge_subtitle,
+                        flag_use = @flag_use,
+                        updated_at = GETDATE()
+                    WHERE slide_id = @slideId
+                `);
+            if (!result.rowsAffected[0]) {
+                return res.status(404).json({ success: false, message: 'ไม่พบแบนเนอร์' });
+            }
+            res.json({ success: true, message: 'บันทึกแบนเนอร์แล้ว' });
+        } catch (error) {
+            res.status(500).json({ success: false, message: error.message });
+        }
+    });
+
+    router.delete('/hero-slides/:slideId', async (req, res) => {
+        if (!requireAdmin(req, res)) return;
+        const slideId = parseInt(req.params.slideId, 10);
+        if (!slideId) return res.status(400).json({ success: false, message: 'รหัสแบนเนอร์ไม่ถูกต้อง' });
+        try {
+            const pool = await poolPromise;
+            await pool.request()
+                .input('slideId', sql.Int, slideId)
+                .query(`
+                    UPDATE BD_PTS.dbo.hero_slides
+                    SET flag_use = 0, updated_at = GETDATE()
+                    WHERE slide_id = @slideId
+                `);
+            res.json({ success: true, message: 'ซ่อนแบนเนอร์แล้ว' });
+        } catch (error) {
+            res.status(500).json({ success: false, message: error.message });
+        }
+    });
+
+    router.post('/hero-slides/upload', (req, res) => {
+        if (!requireAdmin(req, res)) return;
+        heroUpload.single('image')(req, res, (err) => {
+            if (err) {
+                return res.status(400).json({ success: false, message: err.message || 'อัปโหลดไม่สำเร็จ' });
+            }
+            if (!req.file) {
+                return res.status(400).json({ success: false, message: 'กรุณาเลือกไฟล์รูป' });
+            }
+            res.json({ success: true, url: `/uploads/hero/${req.file.filename}` });
+        });
     });
 
     // สถานะการส่งอีเมล OTP

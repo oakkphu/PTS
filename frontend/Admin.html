@@ -36,7 +36,6 @@
     <h1 class="text-3xl md:text-4xl font-bold text-primary mb-2 pts-display">แผงควบคุมแอดมิน</h1>
     <p class="text-on-surface-variant">จัดการคอร์ส บทเรียน ตารางเรียน ผู้ใช้ โพสต์ การชำระเงิน แบนเนอร์หน้าแรก และการส่งอีเมล OTP</p>
   </section>
-  <div id="stats" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3 mb-6"></div>
   <div class="flex flex-wrap gap-2 mb-4">
     <button class="tab-btn active px-4 py-2 rounded-full border text-sm font-bold" data-tab="courses">คอร์ส</button>
     <button class="tab-btn px-4 py-2 rounded-full border text-sm font-bold" data-tab="lessons">บทเรียน</button>
@@ -60,23 +59,6 @@ async function api(url, options = {}) {
   if (res.status === 403) { console.error(data.message || 'ไม่มีสิทธิ์แอดมิน'); location.href = 'Home.html'; throw new Error('forbidden'); }
   if (!res.ok || data.success === false) throw new Error(data.message || 'คำขอล้มเหลว');
   return data;
-}
-
-async function loadStats() {
-  const { data } = await api('/api/admin/stats');
-  document.getElementById('stats').innerHTML = [
-    ['ผู้ใช้', data.users_count],
-    ['คอร์ส', data.courses_count],
-    ['การสมัครเรียน', data.enrollments_count],
-    ['โพสต์', data.posts_count],
-    ['ชำระแล้ว', data.paid_count],
-    ['รายได้ (บาท)', Number(data.revenue || 0).toLocaleString('th-TH')]
-  ].map(([label, value]) => `
-    <div class="bg-white rounded-2xl border p-3 text-center">
-      <p class="text-xs text-on-surface-variant">${label}</p>
-      <p class="text-xl font-bold text-primary">${value}</p>
-    </div>
-  `).join('');
 }
 
 async function renderCourses() {
@@ -114,8 +96,7 @@ async function renderCourses() {
         is_featured: false
       })
     });
-    await loadStats();
-    renderCourses();
+    await renderCourses();
   };
 
   document.querySelectorAll('.feature-btn').forEach(btn => {
@@ -586,7 +567,6 @@ document.querySelectorAll('.tab-btn').forEach(btn => {
   if ((me.user.role || '').toLowerCase() !== 'admin') {
     return location.href = 'Home.html';
   }
-  await loadStats();
   await renderCourses();
 })().catch(err => console.error(err));
 </script>

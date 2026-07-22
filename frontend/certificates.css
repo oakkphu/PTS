@@ -434,3 +434,12 @@
   }
   @page { size: A4 landscape; margin: 10mm; }
 }
+
+html[data-theme="dark"] .cert-page .text-on-surface-variant { color: var(--pts-muted, #b8a8ae); }
+html[data-theme="dark"] .cert-page .text-primary { color: var(--pts-primary, #e895a8); }
+html[data-theme="dark"] .cert-search input,
+html[data-theme="dark"] .cert-toolbar select {
+  background: var(--pts-surface, #1c181c);
+  color: var(--pts-text, #f4eef2);
+  border-color: var(--pts-border, rgba(232,149,168,.2));
+}

@@ -616,3 +616,27 @@ input[type="password"]::-ms-reveal,
     }
     .pts-login__visual:hover .pts-login__visual-img { transform: none; }
   }
+
+  /* Dark theme */
+  html[data-theme="dark"] .pts-login__shell,
+  html[data-theme="dark"] .pts-login__form-pane,
+  html[data-theme="dark"] .pts-login-modal__card,
+  html[data-theme="dark"] .pts-login__field input,
+  html[data-theme="dark"] .pts-login__field select {
+    background: var(--pts-surface, #1c181c) !important;
+    color: var(--pts-text, #f4eef2);
+    border-color: var(--pts-border, rgba(232,149,168,.2));
+  }
+  html[data-theme="dark"] .pts-login__title,
+  html[data-theme="dark"] .pts-login__label,
+  html[data-theme="dark"] .pts-login-modal__title {
+    color: var(--pts-text, #f4eef2);
+  }
+  html[data-theme="dark"] .pts-login__lead,
+  html[data-theme="dark"] .pts-login__hint,
+  html[data-theme="dark"] .pts-login__meta {
+    color: var(--pts-muted, #b8a8ae);
+  }
+  html[data-theme="dark"] .pts-login__blob--a { background: rgba(217,119,142,.22); }
+  html[data-theme="dark"] .pts-login__blob--b { background: rgba(85,165,107,.14); }
+  html[data-theme="dark"] .pts-login__blob--c { background: rgba(255,177,193,.14); }

@@ -148,3 +148,16 @@
 @media (min-width: 768px) {
   .pay-page .md\:text-4xl { font-size: 2.25rem; line-height: 1.15; }
 }
+
+html[data-theme="dark"] .pay-method {
+  background: var(--pts-surface, #1c181c);
+  border-color: var(--pts-border, rgba(232,149,168,.2));
+}
+html[data-theme="dark"] .pay-method.is-active {
+  background: rgba(232,149,168,.12);
+  border-color: var(--pts-primary, #e895a8);
+}
+html[data-theme="dark"] .pay-method strong,
+html[data-theme="dark"] .pay-page .text-primary { color: var(--pts-primary, #e895a8); }
+html[data-theme="dark"] .pay-method span,
+html[data-theme="dark"] .pay-page .text-on-surface-variant { color: var(--pts-muted, #b8a8ae); }

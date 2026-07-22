@@ -536,6 +536,58 @@ function createAdminRouter({ poolPromise, requireLogin }) {
         }
     });
 
+    // เปลี่ยนสี / แสดง-ซ่อน แบบเร็ว โดยไม่ต้องส่งฟอร์มทั้งชุด
+    router.patch('/hero-slides/:slideId', async (req, res) => {
+        if (!requireAdmin(req, res)) return;
+        const slideId = parseInt(req.params.slideId, 10);
+        if (!slideId) return res.status(400).json({ success: false, message: 'รหัสแบนเนอร์ไม่ถูกต้อง' });
+
+        const sets = [];
+        const inputs = [];
+
+        if (req.body.theme != null) {
+            const theme = String(req.body.theme || '').trim().toLowerCase();
+            if (!HERO_THEMES.has(theme)) {
+                return res.status(400).json({ success: false, message: 'ธีมสีไม่ถูกต้อง' });
+            }
+            sets.push('theme = @theme');
+            inputs.push(['theme', sql.NVarChar, theme]);
+        }
+        if (req.body.flag_use != null) {
+            const flag = req.body.flag_use === false || req.body.flag_use === 0 || req.body.flag_use === '0' ? 0 : 1;
+            sets.push('flag_use = @flag_use');
+            inputs.push(['flag_use', sql.Bit, flag]);
+        }
+        if (req.body.sort_order != null) {
+            const sort = Math.max(1, parseInt(req.body.sort_order, 10) || 1);
+            sets.push('sort_order = @sort_order');
+            inputs.push(['sort_order', sql.Int, sort]);
+        }
+        if (!sets.length) {
+            return res.status(400).json({ success: false, message: 'ไม่มีข้อมูลที่จะอัปเดต' });
+        }
+        sets.push('updated_at = GETDATE()');
+
+        try {
+            const pool = await poolPromise;
+            let request = pool.request().input('slideId', sql.Int, slideId);
+            inputs.forEach(([name, type, value]) => {
+                request = request.input(name, type, value);
+            });
+            const result = await request.query(`
+                UPDATE BD_PTS.dbo.hero_slides
+                SET ${sets.join(', ')}
+                WHERE slide_id = @slideId
+            `);
+            if (!result.rowsAffected[0]) {
+                return res.status(404).json({ success: false, message: 'ไม่พบแบนเนอร์' });
+            }
+            res.json({ success: true, message: 'อัปเดตแล้ว' });
+        } catch (error) {
+            res.status(500).json({ success: false, message: error.message });
+        }
+    });
+
     router.post('/hero-slides/upload', (req, res) => {
         if (!requireAdmin(req, res)) return;
         heroUpload.single('image')(req, res, (err) => {

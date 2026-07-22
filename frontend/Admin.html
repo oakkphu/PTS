@@ -68,6 +68,142 @@
   .tab-btn.active { background: #974258; color: #fff; border-color: #974258; }
   html[data-theme="dark"] .tab-btn.active { background: #b85a70; border-color: #b85a70; }
   .admin-main { min-width: 0; }
+
+  /* —— Banner admin (easy add + color picker) —— */
+  .ban-wrap { display:grid; gap:18px; }
+  .ban-card {
+    background: var(--pts-surface, #fff);
+    border: 1px solid var(--pts-border, rgba(151,66,88,.14));
+    border-radius: 20px;
+    padding: 18px 16px;
+    box-shadow: var(--pts-shadow-sm, 0 8px 24px rgba(28,21,32,.05));
+  }
+  .ban-steps {
+    display:flex; flex-wrap:wrap; gap:8px; margin:0 0 14px;
+    font-size:12px; font-weight:700; color:var(--pts-muted,#5c4f55);
+  }
+  .ban-steps span {
+    display:inline-flex; align-items:center; gap:6px;
+    padding:6px 10px; border-radius:999px;
+    background:var(--pts-primary-soft,#f6e6ea); color:var(--pts-primary,#974258);
+  }
+  .ban-theme-grid {
+    display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:10px;
+  }
+  @media (min-width:720px) {
+    .ban-theme-grid { grid-template-columns:repeat(6,minmax(0,1fr)); }
+  }
+  .ban-theme {
+    appearance:none; border:2px solid transparent; border-radius:14px;
+    padding:0; cursor:pointer; overflow:hidden; text-align:left;
+    background:#fff; box-shadow:0 4px 14px rgba(0,0,0,.08);
+    transition: transform .15s ease, border-color .15s ease, box-shadow .15s ease;
+  }
+  .ban-theme:hover { transform:translateY(-2px); }
+  .ban-theme.is-active {
+    border-color:#974258;
+    box-shadow:0 0 0 3px rgba(151,66,88,.2), 0 8px 20px rgba(0,0,0,.12);
+  }
+  .ban-theme__swatch { display:block; height:44px; width:100%; }
+  .ban-theme__label {
+    display:block; padding:7px 8px 8px; font-size:11px; font-weight:700;
+    color:var(--pts-text,#1c1520); line-height:1.2;
+  }
+  .ban-theme[data-theme="rose"] .ban-theme__swatch {
+    background: linear-gradient(135deg,#5c2436,#8a3550 45%,#ffb1c1);
+  }
+  .ban-theme[data-theme="sage"] .ban-theme__swatch {
+    background: linear-gradient(135deg,#1f3d2e,#3d5a4c 45%,#85be96);
+  }
+  .ban-theme[data-theme="gold"] .ban-theme__swatch {
+    background: linear-gradient(135deg,#5c3a18,#a67b32 45%,#e8c478);
+  }
+  .ban-theme[data-theme="ink"] .ban-theme__swatch {
+    background: linear-gradient(135deg,#0c1016,#2c3a48 45%,#8c9cb4);
+  }
+  .ban-theme[data-theme="ocean"] .ban-theme__swatch {
+    background: linear-gradient(135deg,#0e1e24,#2a6a72 45%,#64bec8);
+  }
+  .ban-theme[data-theme="sunset"] .ban-theme__swatch {
+    background: linear-gradient(135deg,#6e2e28,#c45a3a 45%,#ffc08c);
+  }
+  .ban-drop {
+    border:2px dashed rgba(151,66,88,.35);
+    border-radius:16px; padding:18px; text-align:center;
+    background:rgba(151,66,88,.04); cursor:pointer;
+    transition: border-color .15s ease, background .15s ease;
+  }
+  .ban-drop.is-drag { border-color:#974258; background:rgba(151,66,88,.1); }
+  .ban-drop__hint { margin:0; font-size:13px; color:var(--pts-muted,#5c4f55); }
+  .ban-drop__hint strong { color:var(--pts-primary,#974258); }
+  .ban-preview {
+    border-radius:18px; padding:18px; min-height:160px; color:#fff;
+    display:grid; gap:14px; align-items:center;
+    background: linear-gradient(135deg,#5c2436,#8a3550 45%,#3d5a4c);
+    box-shadow: inset 0 1px 0 rgba(255,255,255,.2), 0 16px 36px rgba(0,0,0,.18);
+  }
+  @media (min-width:720px) {
+    .ban-preview { grid-template-columns: 1.2fr .8fr; }
+  }
+  .ban-preview[data-theme="rose"] { background: linear-gradient(135deg,#5c2436,#8a3550 45%,#ffb1c1); }
+  .ban-preview[data-theme="sage"] { background: linear-gradient(135deg,#1f3d2e,#3d5a4c 50%,#85be96); }
+  .ban-preview[data-theme="gold"] { background: linear-gradient(135deg,#5c3a18,#a67b32 50%,#e8c478); }
+  .ban-preview[data-theme="ink"] { background: linear-gradient(135deg,#0c1016,#2c3a48 50%,#8c9cb4); }
+  .ban-preview[data-theme="ocean"] { background: linear-gradient(135deg,#0e1e24,#2a6a72 50%,#64bec8); }
+  .ban-preview[data-theme="sunset"] { background: linear-gradient(135deg,#6e2e28,#c45a3a 50%,#ffc08c); }
+  .ban-preview__eyebrow {
+    display:inline-flex; padding:4px 10px; border-radius:999px; margin:0 0 8px;
+    background:rgba(255,255,255,.18); font-size:11px; font-weight:700;
+  }
+  .ban-preview__title { margin:0 0 6px; font-size:1.25rem; font-weight:800; line-height:1.25; }
+  .ban-preview__title em { font-style:normal; color:#ffd0da; }
+  .ban-preview__lead { margin:0; font-size:13px; opacity:.88; line-height:1.45; }
+  .ban-preview__img {
+    width:100%; aspect-ratio:4/5; max-height:180px; object-fit:cover; object-position:center 14%;
+    border-radius:14px; background:rgba(255,255,255,.15); display:block;
+  }
+  .ban-field { display:grid; gap:6px; }
+  .ban-field label { font-size:12px; font-weight:700; color:var(--pts-muted,#5c4f55); }
+  .ban-field input, .ban-field textarea, .ban-field select {
+    width:100%; border:1px solid var(--pts-border,rgba(151,66,88,.18));
+    border-radius:12px; padding:10px 12px; font:inherit; background:var(--pts-surface,#fff);
+    color:var(--pts-text,#1c1520);
+  }
+  .ban-grid { display:grid; gap:12px; }
+  @media (min-width:720px) {
+    .ban-grid-2 { grid-template-columns:1fr 1fr; }
+  }
+  .ban-adv {
+    border:1px solid var(--pts-border,rgba(151,66,88,.14));
+    border-radius:14px; padding:10px 12px; background:rgba(151,66,88,.03);
+  }
+  .ban-adv summary {
+    cursor:pointer; font-weight:700; font-size:14px; color:var(--pts-primary,#974258);
+    list-style:none;
+  }
+  .ban-adv summary::-webkit-details-marker { display:none; }
+  .ban-adv[open] summary { margin-bottom:12px; }
+  .ban-list-item {
+    display:grid; gap:12px; align-items:center;
+    border:1px solid var(--pts-border,rgba(151,66,88,.14));
+    border-radius:16px; padding:12px; background:var(--pts-surface,#fff);
+  }
+  @media (min-width:800px) {
+    .ban-list-item { grid-template-columns: 120px minmax(0,1fr) auto; }
+  }
+  .ban-list-item.is-hidden { opacity:.55; }
+  .ban-mini-themes { display:flex; flex-wrap:wrap; gap:6px; margin-top:8px; }
+  .ban-mini-themes button {
+    width:22px; height:22px; border-radius:999px; border:2px solid #fff;
+    box-shadow:0 0 0 1px rgba(0,0,0,.15); cursor:pointer; padding:0;
+  }
+  .ban-mini-themes button.is-active { box-shadow:0 0 0 2px #974258; transform:scale(1.12); }
+  .ban-mini-themes button[data-theme="rose"] { background:linear-gradient(135deg,#8a3550,#ffb1c1); }
+  .ban-mini-themes button[data-theme="sage"] { background:linear-gradient(135deg,#3d5a4c,#85be96); }
+  .ban-mini-themes button[data-theme="gold"] { background:linear-gradient(135deg,#a67b32,#e8c478); }
+  .ban-mini-themes button[data-theme="ink"] { background:linear-gradient(135deg,#2c3a48,#8c9cb4); }
+  .ban-mini-themes button[data-theme="ocean"] { background:linear-gradient(135deg,#2a6a72,#64bec8); }
+  .ban-mini-themes button[data-theme="sunset"] { background:linear-gradient(135deg,#c45a3a,#ffc08c); }
 </style>
 </head>
 <body class="pts-body text-on-surface">
@@ -312,73 +448,234 @@ async function renderBanners() {
     'auto_awesome', 'groups', 'event', 'menu_book', 'psychology', 'handshake'
   ];
   const themeOptions = [
-    { value: 'rose', label: 'Rose — ชมพูโรสโกลด์' },
-    { value: 'sage', label: 'Sage — เขียวเซจ' },
-    { value: 'gold', label: 'Gold — ทองอุ่น' },
-    { value: 'ink', label: 'Ink — ดำหมึก' },
-    { value: 'ocean', label: 'Ocean — ทะเลเทียล' },
-    { value: 'sunset', label: 'Sunset — พระอาทิตย์ตก' }
+    { value: 'rose', label: 'Rose' },
+    { value: 'sage', label: 'Sage' },
+    { value: 'gold', label: 'Gold' },
+    { value: 'ink', label: 'Ink' },
+    { value: 'ocean', label: 'Ocean' },
+    { value: 'sunset', label: 'Sunset' }
   ];
   const themeLabel = (t) => (themeOptions.find((x) => x.value === t) || themeOptions[0]).label;
+  const presets = [
+    {
+      key: 'cert',
+      label: 'ใบประกาศ',
+      fill: {
+        eyebrow: 'พร้อมใบประกาศ',
+        title: 'จบหลักสูตรได้ใบประกาศนียบัตรที่นำไปใช้ต่อได้จริง',
+        title_highlight: 'ใบประกาศนียบัตร',
+        lead: 'เก็บใบประกาศในระบบได้ทันทีหลังเรียนครบ และแชร์ต่อในโปรไฟล์ได้',
+        cta_primary_label: 'ดูใบประกาศ',
+        cta_primary_href: 'Certificates.html',
+        cta_secondary_label: 'เข้าคอมมูนิตี้',
+        cta_secondary_href: 'Community.html',
+        badge_icon: 'workspace_premium',
+        badge_title: 'Certificate',
+        badge_subtitle: 'เก็บใบประกาศในระบบได้ทันที',
+        theme: 'gold'
+      }
+    },
+    {
+      key: 'mode',
+      label: 'โหมดเรียน',
+      fill: {
+        eyebrow: 'เรียนได้ทุกที่',
+        title: 'เลือกสไตล์การเรียน Online • Onsite • Hybrid ได้ตามชีวิตคุณ',
+        title_highlight: 'Online • Onsite • Hybrid',
+        lead: 'จัดตารางเรียน เช็กอิน QR Onsite และเรียนออนไลน์ในระบบเดียว',
+        cta_primary_label: 'เริ่มเลือกโหมดเรียน',
+        cta_primary_href: 'Courses.html',
+        cta_secondary_label: 'สมัครสมาชิก',
+        cta_secondary_href: 'Register.html',
+        badge_icon: 'schedule',
+        badge_title: 'Flexible',
+        badge_subtitle: 'เลือกโหมดเรียนได้ตามไลฟ์สไตล์',
+        theme: 'sage'
+      }
+    },
+    {
+      key: 'start',
+      label: 'เริ่มต้น',
+      fill: {
+        eyebrow: 'PTS Learning',
+        title: 'ยกระดับทักษะ Personal Assistant',
+        title_highlight: 'Personal Assistant',
+        lead: 'คอร์สคุณภาพสำหรับเลขาและผู้ช่วยส่วนตัว พร้อมใบประกาศและคอมมูนิตี้',
+        cta_primary_label: 'ดูหลักสูตร',
+        cta_primary_href: 'Courses.html',
+        cta_secondary_label: 'สมัครสมาชิก',
+        cta_secondary_href: 'Register.html',
+        badge_icon: 'auto_awesome',
+        badge_title: 'PTS',
+        badge_subtitle: 'เริ่มเรียนได้ทันที',
+        theme: 'rose'
+      }
+    }
+  ];
+
+  const themePickerHtml = (selected) => themeOptions.map((t) => `
+    <button type="button" class="ban-theme${(selected || 'rose') === t.value ? ' is-active' : ''}"
+      data-theme="${t.value}" data-ban-theme title="${t.label}">
+      <span class="ban-theme__swatch" aria-hidden="true"></span>
+      <span class="ban-theme__label">${t.label}</span>
+    </button>
+  `).join('');
 
   const formHtml = (s = {}) => `
     <input type="hidden" id="b-id" value="${s.slide_id || ''}">
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-3 mb-3">
-      <input id="b-sort" type="number" class="border rounded-xl px-3 py-2" placeholder="ลำดับ" value="${s.sort_order || data.length + 1}">
-      <select id="b-theme" class="border rounded-xl px-3 py-2">
-        ${themeOptions.map((t) => `<option value="${t.value}" ${(s.theme || 'rose') === t.value ? 'selected' : ''}>${t.label}</option>`).join('')}
-      </select>
-      <input id="b-eyebrow" class="border rounded-xl px-3 py-2" placeholder="ข้อความเล็กเหนือหัวข้อ" value="${escapeHtml(s.eyebrow || '')}">
-      <input id="b-title" class="border rounded-xl px-3 py-2 md:col-span-2" placeholder="หัวข้อหลัก *" value="${escapeHtml(s.title || '')}">
-      <input id="b-highlight" class="border rounded-xl px-3 py-2 md:col-span-2" placeholder="คำในหัวข้อที่อยากไฮไลต์สี (ต้องตรงกับข้อความในหัวข้อ)" value="${escapeHtml(s.title_highlight || '')}">
-      <textarea id="b-lead" class="border rounded-xl px-3 py-2 md:col-span-2" rows="2" placeholder="คำอธิบายสั้น">${escapeHtml(s.lead || '')}</textarea>
-      <input id="b-cta1-label" class="border rounded-xl px-3 py-2" placeholder="ปุ่มหลัก — ข้อความ" value="${escapeHtml(s.cta_primary_label || '')}">
-      <input id="b-cta1-href" class="border rounded-xl px-3 py-2" placeholder="ปุ่มหลัก — ลิงก์ เช่น Courses.html" value="${escapeHtml(s.cta_primary_href || '')}">
-      <input id="b-cta2-label" class="border rounded-xl px-3 py-2" placeholder="ปุ่มรอง — ข้อความ" value="${escapeHtml(s.cta_secondary_label || '')}">
-      <input id="b-cta2-href" class="border rounded-xl px-3 py-2" placeholder="ปุ่มรอง — ลิงก์ เช่น Register.html" value="${escapeHtml(s.cta_secondary_href || '')}">
-      <input id="b-image" class="border rounded-xl px-3 py-2 md:col-span-2" placeholder="URL รูป (หรืออัปโหลดด้านล่าง)" value="${escapeHtml(s.image_url || '')}">
-      <div class="md:col-span-2 flex flex-wrap items-center gap-2">
-        <input id="b-file" type="file" accept="image/jpeg,image/png,image/webp,image/gif" class="text-sm">
-        <button type="button" id="b-upload" class="border px-3 py-1.5 rounded-full text-sm font-bold">อัปโหลดรูป</button>
-        <span id="b-upload-msg" class="text-xs text-on-surface-variant"></span>
+    <input type="hidden" id="b-theme" value="${escapeHtml(s.theme || 'rose')}">
+    <input type="hidden" id="b-image" value="${escapeHtml(s.image_url || '')}">
+
+    <div class="ban-steps">
+      <span>1 เลือกสี</span>
+      <span>2 อัปโหลดรูป</span>
+      <span>3 ใส่ข้อความ</span>
+      <span>4 บันทึก</span>
+    </div>
+
+    <div class="ban-field mb-3">
+      <label>สีแบนเนอร์ (พื้นหลังสไลด์)</label>
+      <div class="ban-theme-grid" id="b-theme-picker">${themePickerHtml(s.theme || 'rose')}</div>
+    </div>
+
+    <div class="ban-preview mb-4" id="b-preview" data-theme="${escapeHtml(s.theme || 'rose')}">
+      <div>
+        <p class="ban-preview__eyebrow" id="bp-eyebrow">${escapeHtml(s.eyebrow || 'ข้อความเล็ก')}</p>
+        <h3 class="ban-preview__title" id="bp-title"></h3>
+        <p class="ban-preview__lead" id="bp-lead">${escapeHtml(s.lead || 'คำอธิบายสั้นจะโผล่ตรงนี้')}</p>
       </div>
-      <input id="b-alt" class="border rounded-xl px-3 py-2 md:col-span-2" placeholder="คำอธิบายรูป (alt)" value="${escapeHtml(s.image_alt || '')}">
-      <select id="b-icon" class="border rounded-xl px-3 py-2">${iconOptions.map(i => `<option value="${i}" ${s.badge_icon === i ? 'selected' : ''}>${i}</option>`).join('')}</select>
-      <input id="b-badge-title" class="border rounded-xl px-3 py-2" placeholder="ข้อความแบดจ์ เช่น Certificate" value="${escapeHtml(s.badge_title || '')}">
-      <input id="b-badge-sub" class="border rounded-xl px-3 py-2 md:col-span-2" placeholder="คำอธิบายใต้แบดจ์" value="${escapeHtml(s.badge_subtitle || '')}">
-      <label class="flex items-center gap-2 text-sm md:col-span-2"><input id="b-active" type="checkbox" ${s.flag_use === 0 || s.flag_use === false ? '' : 'checked'}> แสดงบนหน้าแรก</label>
+      <img class="ban-preview__img" id="bp-img" alt="" src="${escapeHtml(s.image_url || '')}"
+        onerror="this.style.opacity='0.35'">
     </div>
-    <div class="flex flex-wrap gap-2 mb-6">
-      <button type="button" id="b-save" class="bg-primary text-white px-5 py-2 rounded-full font-bold">${s.slide_id ? 'บันทึกการแก้ไข' : 'เพิ่มแบนเนอร์'}</button>
-      ${s.slide_id ? '<button type="button" id="b-cancel" class="border px-5 py-2 rounded-full font-bold">ยกเลิกแก้ไข</button>' : ''}
+
+    <div class="ban-field mb-3">
+      <label>รูปแบนเนอร์</label>
+      <div class="ban-drop" id="b-drop" tabindex="0" role="button" aria-label="อัปโหลดรูปแบนเนอร์">
+        <p class="ban-drop__hint"><strong>คลิกหรือลากรูปมาวาง</strong> · JPG / PNG / WEBP · สูงสุด 5MB</p>
+        <input id="b-file" type="file" accept="image/jpeg,image/png,image/webp,image/gif" class="hidden" hidden>
+        <p id="b-upload-msg" class="text-xs mt-2 text-on-surface-variant"></p>
+      </div>
     </div>
-    <p id="b-msg" class="text-sm mb-4"></p>
+
+    <div class="ban-grid ban-grid-2 mb-3">
+      <div class="ban-field" style="grid-column:1/-1">
+        <label>หัวข้อหลัก *</label>
+        <input id="b-title" placeholder="เช่น จบหลักสูตรได้ใบประกาศนียบัตรที่นำไปใช้ต่อได้จริง" value="${escapeHtml(s.title || '')}">
+      </div>
+      <div class="ban-field" style="grid-column:1/-1">
+        <label>คำที่อยากเน้นสีในหัวข้อ (พิมพ์ให้ตรงกับข้อความในหัวข้อ)</label>
+        <input id="b-highlight" placeholder="เช่น ใบประกาศนียบัตร" value="${escapeHtml(s.title_highlight || '')}">
+      </div>
+      <div class="ban-field">
+        <label>ข้อความเล็กเหนือหัวข้อ</label>
+        <input id="b-eyebrow" placeholder="เช่น พร้อมใบประกาศ" value="${escapeHtml(s.eyebrow || '')}">
+      </div>
+      <div class="ban-field">
+        <label>ลำดับการแสดง</label>
+        <input id="b-sort" type="number" min="1" value="${s.sort_order || data.length + 1}">
+      </div>
+      <div class="ban-field" style="grid-column:1/-1">
+        <label>คำอธิบายสั้น</label>
+        <textarea id="b-lead" rows="2" placeholder="อธิบายสั้นๆ 1–2 ประโยค">${escapeHtml(s.lead || '')}</textarea>
+      </div>
+    </div>
+
+    <div class="flex flex-wrap gap-2 mb-3">
+      <span class="text-xs font-bold text-on-surface-variant self-center">เติมเร็ว:</span>
+      ${presets.map((p) => `<button type="button" class="border px-3 py-1.5 rounded-full text-sm font-bold" data-ban-preset="${p.key}">${p.label}</button>`).join('')}
+    </div>
+
+    <details class="ban-adv mb-4">
+      <summary>รายละเอียดเพิ่มเติม (ปุ่ม / แบดจ์ / alt)</summary>
+      <div class="ban-grid ban-grid-2">
+        <div class="ban-field">
+          <label>ปุ่มหลัก — ข้อความ</label>
+          <input id="b-cta1-label" value="${escapeHtml(s.cta_primary_label || '')}" placeholder="ดูหลักสูตร">
+        </div>
+        <div class="ban-field">
+          <label>ปุ่มหลัก — ลิงก์</label>
+          <input id="b-cta1-href" value="${escapeHtml(s.cta_primary_href || '')}" placeholder="Courses.html">
+        </div>
+        <div class="ban-field">
+          <label>ปุ่มรอง — ข้อความ</label>
+          <input id="b-cta2-label" value="${escapeHtml(s.cta_secondary_label || '')}" placeholder="สมัครสมาชิก">
+        </div>
+        <div class="ban-field">
+          <label>ปุ่มรอง — ลิงก์</label>
+          <input id="b-cta2-href" value="${escapeHtml(s.cta_secondary_href || '')}" placeholder="Register.html">
+        </div>
+        <div class="ban-field">
+          <label>ไอคอนแบดจ์</label>
+          <select id="b-icon">${iconOptions.map((i) => `<option value="${i}" ${s.badge_icon === i ? 'selected' : ''}>${i}</option>`).join('')}</select>
+        </div>
+        <div class="ban-field">
+          <label>ข้อความแบดจ์</label>
+          <input id="b-badge-title" value="${escapeHtml(s.badge_title || '')}" placeholder="Certificate">
+        </div>
+        <div class="ban-field" style="grid-column:1/-1">
+          <label>คำอธิบายใต้แบดจ์</label>
+          <input id="b-badge-sub" value="${escapeHtml(s.badge_subtitle || '')}" placeholder="เก็บใบประกาศในระบบได้ทันที">
+        </div>
+        <div class="ban-field" style="grid-column:1/-1">
+          <label>คำอธิบายรูป (alt)</label>
+          <input id="b-alt" value="${escapeHtml(s.image_alt || '')}" placeholder="ภาพประกอบแบนเนอร์">
+        </div>
+      </div>
+    </details>
+
+    <label class="flex items-center gap-2 text-sm mb-4">
+      <input id="b-active" type="checkbox" ${s.flag_use === 0 || s.flag_use === false ? '' : 'checked'}>
+      แสดงบนหน้าแรกทันทีหลังบันทึก
+    </label>
+
+    <div class="flex flex-wrap gap-2 mb-2">
+      <button type="button" id="b-save" class="bg-primary text-white px-5 py-2.5 rounded-full font-bold">
+        ${s.slide_id ? 'บันทึกการแก้ไข' : 'เพิ่มแบนเนอร์'}
+      </button>
+      ${s.slide_id ? '<button type="button" id="b-cancel" class="border px-5 py-2.5 rounded-full font-bold">ยกเลิก</button>' : ''}
+      <a href="Home.html" target="_blank" rel="noopener" class="border px-5 py-2.5 rounded-full font-bold text-sm self-center">ดูหน้าแรก</a>
+    </div>
+    <p id="b-msg" class="text-sm"></p>
   `;
 
   document.getElementById('panel').innerHTML = `
-    <h2 class="font-bold text-lg mb-1" id="b-form-title">เพิ่มแบนเนอร์หน้าแรก</h2>
-    <p class="text-sm text-on-surface-variant mb-4">สไลด์ที่เปิดใช้จะหมุนบนหน้าแรกตามลำดับ — เลือกธีมสีพื้นหลังต่างกันได้ทุกสไลด์</p>
-    <div id="b-form">${formHtml()}</div>
-    <h3 class="font-bold mb-2">รายการแบนเนอร์</h3>
-    <div class="space-y-3">${data.map(s => `
-      <div class="border rounded-xl p-3 flex flex-col md:flex-row gap-3 ${s.flag_use ? '' : 'opacity-50'}">
-        <img src="${escapeHtml(s.image_url || '')}" alt="" class="w-full md:w-36 h-24 object-cover rounded-lg bg-gray-100" onerror="this.style.display='none'">
-        <div class="flex-1 min-w-0">
-          <p class="text-xs text-on-surface-variant">ลำดับ ${s.sort_order} · #${s.slide_id} · ${s.flag_use ? 'แสดง' : 'ซ่อน'} · ${themeLabel(s.theme)}</p>
-          <p class="font-bold truncate">${escapeHtml(s.eyebrow || '')}</p>
-          <p class="text-sm">${escapeHtml(s.title)}</p>
+    <div class="ban-wrap">
+      <div class="ban-card">
+        <h2 class="font-bold text-lg mb-1" id="b-form-title">เพิ่มแบนเนอร์หน้าแรก</h2>
+        <p class="text-sm text-on-surface-variant mb-4">เลือกสี → อัปโหลดรูป → ใส่หัวข้อ → กดบันทึก · เปลี่ยนสีจากรายการด้านล่างได้ทันทีโดยไม่ต้องเปิดแก้ไข</p>
+        <div id="b-form">${formHtml()}</div>
+      </div>
+      <div class="ban-card">
+        <h3 class="font-bold mb-3">รายการแบนเนอร์ (${data.length})</h3>
+        <div class="space-y-3">${data.map((s) => `
+          <div class="ban-list-item${!s.flag_use ? ' is-hidden' : ''}" data-slide-id="${s.slide_id}">
+            <img src="${escapeHtml(s.image_url || '')}" alt="" class="w-full h-28 object-cover rounded-xl bg-gray-100" style="object-position:center 14%" onerror="this.style.display='none'">
+            <div class="min-w-0">
+              <p class="text-xs text-on-surface-variant mb-1">ลำดับ ${s.sort_order} · #${s.slide_id} · ${s.flag_use ? 'แสดง' : 'ซ่อน'} · ${themeLabel(s.theme)}</p>
+              <p class="font-bold truncate">${escapeHtml(s.eyebrow || '—')}</p>
+              <p class="text-sm truncate">${escapeHtml(s.title)}</p>
+              <div class="ban-mini-themes" role="group" aria-label="เปลี่ยนสีแบนเนอร์">
+                ${themeOptions.map((t) => `
+                  <button type="button" data-theme="${t.value}" data-quick-theme="${s.slide_id}"
+                    class="${(s.theme || 'rose') === t.value ? 'is-active' : ''}" title="${t.label}" aria-label="สี ${t.label}"></button>
+                `).join('')}
+              </div>
+            </div>
+            <div class="flex flex-wrap gap-2 shrink-0">
+              <button class="edit-banner border px-3 py-1.5 rounded-full text-sm font-bold" data-id="${s.slide_id}">แก้ไข</button>
+              ${s.flag_use
+                ? `<button class="hide-banner text-red-600 font-bold text-sm" data-id="${s.slide_id}">ซ่อน</button>`
+                : `<button class="show-banner border px-3 py-1.5 rounded-full text-sm font-bold" data-id="${s.slide_id}">แสดง</button>`}
+            </div>
+          </div>`).join('') || '<p class="text-on-surface-variant">ยังไม่มีแบนเนอร์ — เพิ่มอันแรกด้านบนได้เลย</p>'}
         </div>
-        <div class="flex gap-2 shrink-0">
-          <button class="edit-banner border px-3 py-1 rounded-full text-sm font-bold" data-id="${s.slide_id}">แก้ไข</button>
-          ${s.flag_use ? `<button class="hide-banner text-red-600 font-bold text-sm" data-id="${s.slide_id}">ซ่อน</button>` : ''}
-        </div>
-      </div>`).join('') || '<p>ยังไม่มีแบนเนอร์</p>'}
+      </div>
     </div>
   `;
 
   const readForm = () => ({
     sort_order: Number(document.getElementById('b-sort').value || 1),
-    theme: document.getElementById('b-theme').value,
+    theme: document.getElementById('b-theme').value || 'rose',
     eyebrow: document.getElementById('b-eyebrow').value,
     title: document.getElementById('b-title').value,
     title_highlight: document.getElementById('b-highlight').value,
@@ -395,24 +692,126 @@ async function renderBanners() {
     flag_use: document.getElementById('b-active').checked
   });
 
-  const wireForm = () => {
-    document.getElementById('b-upload').onclick = async () => {
-      const file = document.getElementById('b-file').files?.[0];
-      const msg = document.getElementById('b-upload-msg');
-      if (!file) { msg.textContent = 'เลือกไฟล์ก่อน'; return; }
-      msg.textContent = 'กำลังอัปโหลด...';
-      try {
-        const fd = new FormData();
-        fd.append('image', file);
-        const res = await fetch('/api/admin/hero-slides/upload', { method: 'POST', credentials: 'include', body: fd });
-        const json = await res.json().catch(() => ({}));
-        if (!res.ok || json.success === false) throw new Error(json.message || 'อัปโหลดไม่สำเร็จ');
-        document.getElementById('b-image').value = json.url;
-        msg.textContent = 'อัปโหลดแล้ว';
-      } catch (e) {
-        msg.textContent = e.message;
-      }
+  const renderPreviewTitle = (title, highlight) => {
+    const el = document.getElementById('bp-title');
+    if (!el) return;
+    const raw = String(title || 'หัวข้อแบนเนอร์');
+    const h = String(highlight || '').trim();
+    if (!h || raw.indexOf(h) < 0) {
+      el.textContent = raw;
+      return;
+    }
+    const idx = raw.indexOf(h);
+    el.innerHTML = `${escapeHtml(raw.slice(0, idx))}<em>${escapeHtml(h)}</em>${escapeHtml(raw.slice(idx + h.length))}`;
+  };
+
+  const syncPreview = () => {
+    const theme = document.getElementById('b-theme')?.value || 'rose';
+    const preview = document.getElementById('b-preview');
+    if (preview) preview.dataset.theme = theme;
+    const eyebrow = document.getElementById('b-eyebrow')?.value || 'ข้อความเล็ก';
+    const lead = document.getElementById('b-lead')?.value || 'คำอธิบายสั้นจะโผล่ตรงนี้';
+    const img = document.getElementById('b-image')?.value || '';
+    const bpEyebrow = document.getElementById('bp-eyebrow');
+    const bpLead = document.getElementById('bp-lead');
+    const bpImg = document.getElementById('bp-img');
+    if (bpEyebrow) bpEyebrow.textContent = eyebrow;
+    if (bpLead) bpLead.textContent = lead;
+    if (bpImg) {
+      bpImg.style.opacity = '1';
+      bpImg.src = img || '';
+    }
+    renderPreviewTitle(
+      document.getElementById('b-title')?.value,
+      document.getElementById('b-highlight')?.value
+    );
+  };
+
+  const setTheme = (theme) => {
+    const t = themeOptions.some((x) => x.value === theme) ? theme : 'rose';
+    const hidden = document.getElementById('b-theme');
+    if (hidden) hidden.value = t;
+    document.querySelectorAll('#b-theme-picker .ban-theme').forEach((btn) => {
+      btn.classList.toggle('is-active', btn.dataset.theme === t);
+    });
+    syncPreview();
+  };
+
+  const fillFields = (obj) => {
+    const map = {
+      'b-eyebrow': 'eyebrow',
+      'b-title': 'title',
+      'b-highlight': 'title_highlight',
+      'b-lead': 'lead',
+      'b-cta1-label': 'cta_primary_label',
+      'b-cta1-href': 'cta_primary_href',
+      'b-cta2-label': 'cta_secondary_label',
+      'b-cta2-href': 'cta_secondary_href',
+      'b-badge-title': 'badge_title',
+      'b-badge-sub': 'badge_subtitle',
+      'b-icon': 'badge_icon'
     };
+    Object.entries(map).forEach(([id, key]) => {
+      const el = document.getElementById(id);
+      if (el && obj[key] != null) el.value = obj[key];
+    });
+    if (obj.theme) setTheme(obj.theme);
+    else syncPreview();
+  };
+
+  const uploadFile = async (file) => {
+    const msg = document.getElementById('b-upload-msg');
+    if (!file) { if (msg) msg.textContent = 'เลือกไฟล์ก่อน'; return; }
+    if (msg) msg.textContent = 'กำลังอัปโหลด...';
+    try {
+      const fd = new FormData();
+      fd.append('image', file);
+      const res = await fetch('/api/admin/hero-slides/upload', { method: 'POST', credentials: 'include', body: fd });
+      const json = await res.json().catch(() => ({}));
+      if (!res.ok || json.success === false) throw new Error(json.message || 'อัปโหลดไม่สำเร็จ');
+      document.getElementById('b-image').value = json.url;
+      if (msg) msg.textContent = 'อัปโหลดแล้ว ✓';
+      syncPreview();
+    } catch (e) {
+      if (msg) msg.textContent = e.message;
+    }
+  };
+
+  const wireForm = () => {
+    syncPreview();
+
+    document.querySelectorAll('#b-theme-picker .ban-theme').forEach((btn) => {
+      btn.onclick = () => setTheme(btn.dataset.theme);
+    });
+
+    ['b-title', 'b-highlight', 'b-eyebrow', 'b-lead'].forEach((id) => {
+      document.getElementById(id)?.addEventListener('input', syncPreview);
+    });
+
+    document.querySelectorAll('[data-ban-preset]').forEach((btn) => {
+      btn.onclick = () => {
+        const preset = presets.find((p) => p.key === btn.dataset.banPreset);
+        if (preset) fillFields(preset.fill);
+      };
+    });
+
+    const drop = document.getElementById('b-drop');
+    const fileInput = document.getElementById('b-file');
+    drop?.addEventListener('click', () => fileInput?.click());
+    drop?.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); fileInput?.click(); }
+    });
+    fileInput?.addEventListener('change', () => uploadFile(fileInput.files?.[0]));
+    ['dragenter', 'dragover'].forEach((ev) => {
+      drop?.addEventListener(ev, (e) => { e.preventDefault(); drop.classList.add('is-drag'); });
+    });
+    ['dragleave', 'drop'].forEach((ev) => {
+      drop?.addEventListener(ev, (e) => { e.preventDefault(); drop.classList.remove('is-drag'); });
+    });
+    drop?.addEventListener('drop', (e) => {
+      const file = e.dataTransfer?.files?.[0];
+      if (file) uploadFile(file);
+    });
 
     document.getElementById('b-save').onclick = async () => {
       const msg = document.getElementById('b-msg');
@@ -425,11 +824,11 @@ async function renderBanners() {
         } else {
           await api('/api/admin/hero-slides', { method: 'POST', body: JSON.stringify(payload) });
         }
-        msg.className = 'text-sm mb-4 text-emerald-700';
-        msg.textContent = 'บันทึกแล้ว';
+        msg.className = 'text-sm text-emerald-700';
+        msg.textContent = 'บันทึกแล้ว — เปิดหน้าแรกเพื่อดูผล';
         renderBanners();
       } catch (e) {
-        msg.className = 'text-sm mb-4 text-red-600';
+        msg.className = 'text-sm text-red-600';
         msg.textContent = e.message;
       }
     };
@@ -439,9 +838,9 @@ async function renderBanners() {
 
   wireForm();
 
-  document.querySelectorAll('.edit-banner').forEach(btn => {
+  document.querySelectorAll('.edit-banner').forEach((btn) => {
     btn.onclick = () => {
-      const slide = data.find(s => String(s.slide_id) === btn.dataset.id);
+      const slide = data.find((s) => String(s.slide_id) === btn.dataset.id);
       if (!slide) return;
       document.getElementById('b-form-title').textContent = `แก้ไขแบนเนอร์ #${slide.slide_id}`;
       document.getElementById('b-form').innerHTML = formHtml(slide);
@@ -450,10 +849,36 @@ async function renderBanners() {
     };
   });
 
-  document.querySelectorAll('.hide-banner').forEach(btn => {
+  document.querySelectorAll('.hide-banner').forEach((btn) => {
     btn.onclick = async () => {
       await api(`/api/admin/hero-slides/${btn.dataset.id}`, { method: 'DELETE' });
       renderBanners();
+    };
+  });
+
+  document.querySelectorAll('.show-banner').forEach((btn) => {
+    btn.onclick = async () => {
+      await api(`/api/admin/hero-slides/${btn.dataset.id}`, {
+        method: 'PATCH',
+        body: JSON.stringify({ flag_use: 1 })
+      });
+      renderBanners();
+    };
+  });
+
+  document.querySelectorAll('[data-quick-theme]').forEach((btn) => {
+    btn.onclick = async () => {
+      const id = btn.dataset.quickTheme;
+      const theme = btn.dataset.theme;
+      try {
+        await api(`/api/admin/hero-slides/${id}`, {
+          method: 'PATCH',
+          body: JSON.stringify({ theme })
+        });
+        renderBanners();
+      } catch (e) {
+        alert(e.message || 'เปลี่ยนสีไม่สำเร็จ');
+      }
     };
   });
 }

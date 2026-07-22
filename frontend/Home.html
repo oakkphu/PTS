@@ -3,7 +3,7 @@
         <script src="/comp/theme-boot.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@300;400;500;600;700&amp;family=Sora:wght@500;600;700&amp;display=swap" rel="stylesheet">
         <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=block" rel="stylesheet">
-        <link rel="stylesheet" href="site.css?v=20260722h">
+        <link rel="stylesheet" href="site.css?v=20260722i">
         <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
         <script id="tailwind-config">try{
                 tailwind.config = {
@@ -136,8 +136,11 @@
     <span class="pts-hero-banner__spark pts-hero-banner__spark--2"></span>
     <span class="pts-hero-banner__spark pts-hero-banner__spark--3"></span>
     <span class="pts-hero-banner__spark pts-hero-banner__spark--4"></span>
+    <span class="pts-hero-banner__spark pts-hero-banner__spark--5"></span>
+    <span class="pts-hero-banner__spark pts-hero-banner__spark--6"></span>
     <span class="pts-hero-banner__ring pts-hero-banner__ring--a"></span>
     <span class="pts-hero-banner__ring pts-hero-banner__ring--b"></span>
+    <span class="pts-hero-banner__dust" aria-hidden="true"></span>
   </div>
   <div class="pts-hero-banner__stage" id="hero-stage-wrap" data-pts-hero-tilt>
     <div class="pts-hero-banner__shine" aria-hidden="true"></div>
@@ -150,6 +153,7 @@
       <button type="button" class="pts-hero-banner__arrow" id="hero-next" aria-label="แบนเนอร์ถัดไป">
         <span class="material-symbols-outlined">chevron_right</span>
       </button>
+      <p class="pts-hero-banner__count" id="hero-count" aria-live="polite">01</p>
     </div>
     <div class="pts-hero-banner__progress" aria-hidden="true">
       <span class="pts-hero-banner__progress-bar" id="hero-progress"></span>
@@ -465,6 +469,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     const prevBtn = document.getElementById('hero-prev');
     const nextBtn = document.getElementById('hero-next');
     const progressBar = document.getElementById('hero-progress');
+    const countEl = document.getElementById('hero-count');
     const banner = document.querySelector('.pts-hero-banner');
     const nav = document.querySelector('.pts-hero-banner__nav');
     if (!stage || !dotsBox) return;
@@ -536,7 +541,8 @@ document.addEventListener('DOMContentLoaded', async () => {
                 <img
                   src="${escapeHtml(slide.image_url || '')}"
                   alt="${escapeHtml(slide.image_alt || '')}"
-                  width="1200" height="900" decoding="async"
+                  width="960" height="1200" decoding="async"
+                  style="object-position:center 14%"
                   ${index === 0 ? 'fetchpriority="high"' : 'loading="lazy"'}>
               </figure>
               ${badge}
@@ -580,6 +586,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (slides.length < 2) {
       if (nav) nav.hidden = true;
       if (progressBar && progressBar.parentElement) progressBar.parentElement.hidden = true;
+      if (countEl) countEl.hidden = true;
       return;
     }
 
@@ -613,6 +620,18 @@ document.addEventListener('DOMContentLoaded', async () => {
     function pauseProgress(paused) {
       if (!progressBar) return;
       progressBar.classList.toggle('is-paused', !!paused);
+    }
+
+    function updateCount(i) {
+      if (!countEl) return;
+      countEl.textContent = String(i + 1).padStart(2, '0');
+    }
+
+    function pulseSwitch() {
+      if (!banner || reduceMotion) return;
+      banner.classList.add('is-switching');
+      window.clearTimeout(pulseSwitch._t);
+      pulseSwitch._t = window.setTimeout(() => banner.classList.remove('is-switching'), 480);
     }
 
     function goTo(nextIdx, userAction, forcedDir) {
@@ -649,6 +668,8 @@ document.addEventListener('DOMContentLoaded', async () => {
 
       applyTheme(slidesData[target]?.theme);
       index = target;
+      updateCount(index);
+      pulseSwitch();
       restartProgress();
 
       window.setTimeout(() => {
@@ -710,7 +731,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       restart();
     }, { passive: true });
 
-    // Pointer tilt + light follow
+    // Pointer tilt + layered parallax + light follow
     if (stageWrap && !reduceMotion) {
       let raf = 0;
       stageWrap.addEventListener('pointermove', (e) => {
@@ -719,19 +740,36 @@ document.addEventListener('DOMContentLoaded', async () => {
         const py = (e.clientY - rect.top) / rect.height;
         cancelAnimationFrame(raf);
         raf = requestAnimationFrame(() => {
-          const rx = (0.5 - py) * 5;
-          const ry = (px - 0.5) * 7;
+          const rx = (0.5 - py) * 6;
+          const ry = (px - 0.5) * 8;
+          const parx = (px - 0.5) * 18;
+          const pary = (py - 0.5) * 12;
           stageWrap.style.transform = `perspective(1200px) rotateX(${rx.toFixed(2)}deg) rotateY(${ry.toFixed(2)}deg)`;
           stageWrap.style.setProperty('--hero-mx', (px * 100).toFixed(1) + '%');
           stageWrap.style.setProperty('--hero-my', (py * 100).toFixed(1) + '%');
+          stageWrap.style.setProperty('--hero-parx', parx.toFixed(1) + 'px');
+          stageWrap.style.setProperty('--hero-pary', pary.toFixed(1) + 'px');
         });
       });
       stageWrap.addEventListener('pointerleave', () => {
         cancelAnimationFrame(raf);
         stageWrap.style.transform = '';
+        stageWrap.style.setProperty('--hero-parx', '0px');
+        stageWrap.style.setProperty('--hero-pary', '0px');
       });
     }
 
+    // Keyboard arrows when hero is in view
+    document.addEventListener('keydown', (e) => {
+      if (e.key !== 'ArrowLeft' && e.key !== 'ArrowRight') return;
+      const tag = (e.target && e.target.tagName) || '';
+      if (/INPUT|TEXTAREA|SELECT/.test(tag)) return;
+      if (e.key === 'ArrowLeft') prev();
+      else next();
+      restart();
+    });
+
+    updateCount(0);
     start();
   })();
 

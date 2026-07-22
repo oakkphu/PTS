@@ -1041,6 +1041,35 @@ input.pts-pw-input::-ms-clear {
   box-shadow: 0 40px 80px rgba(28, 10, 10, .42), 0 2px 0 rgba(255,255,255,.2) inset, 0 0 0 1px rgba(200,90,70,.12);
 }
 
+.pts-hero-banner[data-theme="custom"] .pts-hero-banner__wash {
+  background:
+    radial-gradient(1100px 620px at -5% -10%, rgba(var(--hero-c-rgb, 151,66,88), 0.72), transparent 58%),
+    radial-gradient(900px 540px at 105% 5%, rgba(var(--hero-c-rgb, 151,66,88), 0.28), transparent 52%),
+    radial-gradient(780px 460px at 70% 110%, rgba(20, 12, 16, 0.55), transparent 55%),
+    linear-gradient(148deg,
+      rgba(12, 10, 14, 0.95) 0%,
+      rgba(var(--hero-c-rgb, 151,66,88), 0.88) 38%,
+      rgba(var(--hero-c-rgb, 151,66,88), 0.55) 68%,
+      #141018 100%);
+}
+.pts-hero-banner[data-theme="custom"] .pts-hero-banner__orb--a {
+  background: radial-gradient(circle, rgba(var(--hero-c-rgb, 151,66,88), .95) 0%, rgba(var(--hero-c-rgb, 151,66,88), .35) 45%, transparent 72%);
+}
+.pts-hero-banner[data-theme="custom"] .pts-hero-banner__orb--b {
+  background: radial-gradient(circle, rgba(255,255,255,.45) 0%, rgba(var(--hero-c-rgb, 151,66,88), .25) 50%, transparent 72%);
+}
+.pts-hero-banner[data-theme="custom"] .pts-hero-banner__orb--c {
+  background: radial-gradient(circle, rgba(var(--hero-c-rgb, 151,66,88), .55) 0%, rgba(20,12,16,.3) 55%, transparent 72%);
+}
+.pts-hero-banner[data-theme="custom"] .pts-hero-banner__beam {
+  background: linear-gradient(180deg, rgba(255,255,255,.22), rgba(var(--hero-c-rgb, 151,66,88), .12) 40%, transparent 70%);
+}
+.pts-hero-banner[data-theme="custom"] .pts-hero-banner__ring--a { border-color: rgba(var(--hero-c-rgb, 151,66,88), .35); }
+.pts-hero-banner[data-theme="custom"] .pts-hero-banner__ring--b { border-color: rgba(255,255,255,.22); }
+.pts-hero-banner[data-theme="custom"] .pts-hero-banner__stage {
+  box-shadow: 0 40px 80px rgba(12, 8, 12, .42), 0 2px 0 rgba(255,255,255,.2) inset, 0 0 0 1px rgba(var(--hero-c-rgb, 151,66,88), .18);
+}
+
 @keyframes pts-hero-float {
   0%, 100% { transform: translate3d(0,0,0) scale(1); }
   35% { transform: translate3d(22px,-28px,0) scale(1.08); }

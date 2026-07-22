@@ -60,7 +60,7 @@ cp .env.example .env
 
 ## บัญชีและสิทธิ์
 
-- Guest: ดูคอร์ส/อ่านคอมมูนิตี้
+- Guest: ดูหลักสูตร/อ่านคอมมูนิตี้
 - Student: สมัครเรียน เรียนบทเรียน โพสต์/ไลก์ ชำระเงิน ใบประกาศ
 - Admin: จัดการที่ `Admin.html` (ต้องตั้ง `Role = admin` ในตาราง `users_main`)
 
@@ -71,7 +71,7 @@ cp .env.example .env
 | Home / Courses / CourseDetail | หลักสูตร |
 | Learn | เรียนบทเรียน |
 | Community / Liked | คอมมูนิตี้ |
-| Favorites | คอร์สโปรด |
+| Favorites | หลักสูตรโปรด |
 | Schedule | ตารางเรียน |
 | Payments | ชำระเงิน PromptPay (ยืนยันในระบบตามบัญชีผู้ใช้) |
 | Certificates | ใบประกาศ |

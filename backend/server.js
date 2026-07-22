@@ -318,7 +318,7 @@ app.post('/api/users/verify-otp-reset', async (req, res) => {
     }
 });
 // -------------------------------------------------------------------------
-// 📚 [API ดึงข้อมูลคอร์สเรียน] ดึงข้อมูลจากตาราง courses_main
+// 📚 [API ดึงข้อมูลหลักสูตร] ดึงข้อมูลจากตาราง courses_main
 // -------------------------------------------------------------------------
 app.get('/api/courses', async (req, res) => {
     try {
@@ -366,10 +366,10 @@ app.get('/api/courses', async (req, res) => {
         });
 
     } catch (error) {
-        console.error("❌ ดึงข้อมูลคอร์สล้มเหลว:", error.message);
+        console.error("❌ ดึงข้อมูลหลักสูตรล้มเหลว:", error.message);
         res.status(500).json({ 
             success: false, 
-            message: 'เกิดข้อผิดพลาดในการดึงข้อมูลคอร์สเรียนจากฐานข้อมูล' 
+            message: 'เกิดข้อผิดพลาดในการดึงข้อมูลหลักสูตรจากฐานข้อมูล' 
         });
     }
 });
@@ -457,7 +457,7 @@ app.get('/api/my/liked-posts', async (req, res) => {
     }
 });
 
-// คอร์สโปรด
+// หลักสูตรโปรด
 app.get('/api/my/favorite-courses', async (req, res) => {
     const user = requireLogin(req, res);
     if (!user) return;
@@ -490,7 +490,7 @@ app.post('/api/courses/:courseId/favorite', async (req, res) => {
     if (!user) return;
 
     const courseId = parseInt(req.params.courseId, 10);
-    if (!courseId) return res.status(400).json({ success: false, message: 'รหัสคอร์สไม่ถูกต้อง' });
+    if (!courseId) return res.status(400).json({ success: false, message: 'รหัสหลักสูตรไม่ถูกต้อง' });
 
     try {
         const pool = await poolPromise;
@@ -514,7 +514,7 @@ app.post('/api/courses/:courseId/favorite', async (req, res) => {
             favorited = true;
         }
 
-        res.json({ success: true, favorited, message: favorited ? 'บันทึกคอร์สโปรดแล้ว' : 'นำออกจากคอร์สโปรดแล้ว' });
+        res.json({ success: true, favorited, message: favorited ? 'บันทึกหลักสูตรโปรดแล้ว' : 'นำออกจากหลักสูตรโปรดแล้ว' });
     } catch (error) {
         res.status(500).json({ success: false, message: error.message });
     }
@@ -719,7 +719,7 @@ app.post('/api/community/:postId/comments', async (req, res) => {
 });
 
 // =========================================================================
-// 📘 สมัครเรียน / คอร์สของฉัน
+// 📘 สมัครเรียน / หลักสูตรของฉัน
 // =========================================================================
 app.post('/api/courses/:courseId/enroll', async (req, res) => {
     const user = requireLogin(req, res);
@@ -727,7 +727,7 @@ app.post('/api/courses/:courseId/enroll', async (req, res) => {
 
     const courseId = parseInt(req.params.courseId, 10);
     if (!courseId) {
-        return res.status(400).json({ success: false, message: 'รหัสคอร์สไม่ถูกต้อง' });
+        return res.status(400).json({ success: false, message: 'รหัสหลักสูตรไม่ถูกต้อง' });
     }
 
     try {
@@ -738,7 +738,7 @@ app.post('/api/courses/:courseId/enroll', async (req, res) => {
             .query('SELECT course_id, course_name FROM BD_PTS.dbo.courses_main WHERE course_id = @courseId');
 
         if (courseCheck.recordset.length === 0) {
-            return res.status(404).json({ success: false, message: 'ไม่พบคอร์สนี้ในระบบ' });
+            return res.status(404).json({ success: false, message: 'ไม่พบหลักสูตรนี้ในระบบ' });
         }
 
         const existing = await pool.request()
@@ -753,7 +753,7 @@ app.post('/api/courses/:courseId/enroll', async (req, res) => {
             return res.json({
                 success: true,
                 already_enrolled: true,
-                message: 'คุณสมัครคอร์สนี้ไว้แล้ว',
+                message: 'คุณสมัครหลักสูตรนี้ไว้แล้ว',
                 enrollment_id: existing.recordset[0].enrollment_id
             });
         }
@@ -831,8 +831,8 @@ app.get('/api/my/courses', async (req, res) => {
             }
         });
     } catch (error) {
-        console.error('❌ ดึงคอร์สของฉันล้มเหลว:', error.message);
-        res.status(500).json({ success: false, message: 'ไม่สามารถดึงคอร์สของฉันได้: ' + error.message });
+        console.error('❌ ดึงหลักสูตรของฉันล้มเหลว:', error.message);
+        res.status(500).json({ success: false, message: 'ไม่สามารถดึงหลักสูตรของฉันได้: ' + error.message });
     }
 });
 
@@ -866,7 +866,7 @@ app.patch('/api/my/courses/:courseId/progress', async (req, res) => {
             `);
 
         if (!result.recordset[0] || result.recordset[0].affected === 0) {
-            return res.status(404).json({ success: false, message: 'ยังไม่ได้สมัครคอร์สนี้' });
+            return res.status(404).json({ success: false, message: 'ยังไม่ได้สมัครหลักสูตรนี้' });
         }
 
         res.json({ success: true, message: 'อัปเดตความคืบหน้าแล้ว', progress_percent: progress, status });

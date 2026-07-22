@@ -3,7 +3,7 @@
         <script src="/comp/theme-boot.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@300;400;500;600;700&amp;family=Sora:wght@500;600;700&amp;display=swap" rel="stylesheet">
         <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=block" rel="stylesheet">
-        <link rel="stylesheet" href="site.css?v=20260722i">
+        <link rel="stylesheet" href="site.css?v=20260722j">
         <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
         <script id="tailwind-config">try{
                 tailwind.config = {
@@ -242,7 +242,7 @@
 <div class="flex flex-col md:flex-row justify-between items-end gap-md mb-lg">
 <div class="text-left">
 <h2 class="font-headline-lg text-headline-lg text-on-background mb-base">หลักสูตรแนะนำ</h2>
-<p class="font-body-md text-body-md text-on-surface-variant">ข้อมูลจากระบบจริง อัปเดตตามคอร์สในฐานข้อมูล</p>
+<p class="font-body-md text-body-md text-on-surface-variant">ข้อมูลจากระบบจริง อัปเดตตามหลักสูตรในฐานข้อมูล</p>
 </div>
 <a href="Courses.html" class="flex items-center gap-sm text-primary font-bold group">
                 ดูทั้งหมด
@@ -350,7 +350,7 @@
 <span class="material-symbols-outlined text-primary text-sm" style="font-variation-settings: 'FILL' 1;">star</span>
 <span class="material-symbols-outlined text-primary text-sm" style="font-variation-settings: 'FILL' 1;">star</span>
 </div>
-<p class="font-body-md text-body-md text-on-surface-variant mb-lg flex-grow">"ความรู้ที่ได้จากคอร์ส Digital Tools ช่วยประหยัดเวลาทำงานได้เยอะมากค่ะ ระบบเว็บก็ใช้งานง่าย ลื่นไหลมาก แนะนำเลยค่ะ"</p>
+<p class="font-body-md text-body-md text-on-surface-variant mb-lg flex-grow">"ความรู้ที่ได้จากหลักสูตร Digital Tools ช่วยประหยัดเวลาทำงานได้เยอะมากค่ะ ระบบเว็บก็ใช้งานง่าย ลื่นไหลมาก แนะนำเลยค่ะ"</p>
 <div class="flex items-center gap-sm">
 <img alt="User Avatar" class="w-12 h-12 rounded-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuC2CSIg4SXi-ZVHfhgpezFcUa2tM_LG2RTz_t1-rEh7S6nYVKc9lzNE5DHVdV7pUrdwk5Zaj9f9dMC6wtPgMTNQYEY6gFFWbVa5Uoh94JYu6YwEAYZ_kSgnPH4imKG9WsqpW_3k4BG7P-dLk4qdF92dvXFhIXOm_OP3fJ4D4zZx4ZfvsgpBZvQAVPZMU7t1wIJV1khHZ7S-nu7cShoTkjohP0TCLi5oVWf-6KdInNLAKaTbBuxL0n4IRQ">
 <div>
@@ -371,7 +371,7 @@
 <div class="space-y-sm">
 <details class="group bg-surface-container-lowest rounded-2xl soft-shadow border border-outline-variant/20 overflow-hidden">
 <summary class="flex justify-between items-center p-md cursor-pointer list-none hover:bg-surface-container-low transition-colors">
-<span class="font-headline-sm text-headline-sm text-on-surface">คอร์สเรียนมีอายุการใช้งานกี่วัน?</span>
+<span class="font-headline-sm text-headline-sm text-on-surface">หลักสูตรมีอายุการใช้งานกี่วัน?</span>
 <span class="material-symbols-outlined group-open:rotate-180 transition-transform">expand_more</span>
 </summary>
 <div class="p-md pt-0 text-on-surface-variant font-body-md text-body-md">
@@ -478,7 +478,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       'check_circle', 'schedule', 'workspace_premium', 'school', 'star', 'verified',
       'auto_awesome', 'groups', 'event', 'menu_book', 'psychology', 'handshake'
     ]);
-    const ALLOWED_THEMES = new Set(['rose', 'sage', 'gold', 'ink', 'ocean', 'sunset']);
+    const ALLOWED_THEMES = new Set(['rose', 'sage', 'gold', 'ink', 'ocean', 'sunset', 'custom']);
     const INTERVAL = 7000;
 
     function normalizeTheme(theme) {
@@ -486,9 +486,32 @@ document.addEventListener('DOMContentLoaded', async () => {
       return ALLOWED_THEMES.has(t) ? t : 'rose';
     }
 
-    function applyTheme(theme) {
+    function parseHexColor(value) {
+      const m = String(value || '').trim().match(/^#?([0-9a-fA-F]{6})$/);
+      if (!m) return null;
+      const hex = `#${m[1].toLowerCase()}`;
+      const n = parseInt(m[1], 16);
+      return {
+        hex,
+        r: (n >> 16) & 255,
+        g: (n >> 8) & 255,
+        b: n & 255
+      };
+    }
+
+    function applyTheme(theme, themeColor) {
       if (!banner) return;
-      banner.dataset.theme = normalizeTheme(theme);
+      const t = normalizeTheme(theme);
+      const custom = t === 'custom' ? parseHexColor(themeColor) : null;
+      if (custom) {
+        banner.dataset.theme = 'custom';
+        banner.style.setProperty('--hero-c', custom.hex);
+        banner.style.setProperty('--hero-c-rgb', `${custom.r}, ${custom.g}, ${custom.b}`);
+      } else {
+        banner.dataset.theme = t === 'custom' ? 'rose' : t;
+        banner.style.removeProperty('--hero-c');
+        banner.style.removeProperty('--hero-c-rgb');
+      }
     }
 
     function renderTitle(title, highlight) {
@@ -580,7 +603,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     stage.innerHTML = slidesData.map(panelHtml).join('');
-    applyTheme(slidesData[0].theme);
+    applyTheme(slidesData[0].theme, slidesData[0].theme_color);
 
     const slides = Array.from(stage.querySelectorAll('.pts-hero-banner__panel'));
     if (slides.length < 2) {
@@ -666,7 +689,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         dot.setAttribute('aria-selected', on ? 'true' : 'false');
       });
 
-      applyTheme(slidesData[target]?.theme);
+      applyTheme(slidesData[target]?.theme, slidesData[target]?.theme_color);
       index = target;
       updateCount(index);
       pulseSwitch();

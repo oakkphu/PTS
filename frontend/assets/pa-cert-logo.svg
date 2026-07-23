@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 420 220" role="img" aria-label="Personal Assistant Academy">
+  <!-- Header logo: stylized PA + wordmark (rose on transparent) -->
+  <g fill="none" stroke="#C48B96" stroke-width="10" stroke-linecap="round" stroke-linejoin="round">
+    <!-- P outline -->
+    <path d="M70 175 V45 h70 c38 0 62 20 62 52 0 32-24 52-62 52 H95"/>
+    <!-- A with upward arrow on right leg -->
+    <path d="M215 175 L265 45 h28 L340 155"/>
+    <path d="M340 155 L360 120"/>
+    <path d="M340 155 L375 145"/>
+    <!-- A crossbar hint -->
+    <path d="M248 118 H312" stroke-width="8"/>
+  </g>
+  <!-- ® -->
+  <text x="368" y="52" fill="#C48B96" font-family="Arial, Helvetica, sans-serif" font-size="18" font-weight="700">®</text>
+  <!-- Divider -->
+  <line x1="55" y1="188" x2="365" y2="188" stroke="#C48B96" stroke-width="2"/>
+  <!-- Wordmark -->
+  <text x="210" y="205" text-anchor="middle" fill="#C48B96" font-family="Montserrat, Arial, Helvetica, sans-serif" font-size="16" font-weight="700" letter-spacing="3">PERSONAL ASSISTANT</text>
+  <text x="210" y="218" text-anchor="middle" fill="#C48B96" font-family="Montserrat, Arial, Helvetica, sans-serif" font-size="12" font-weight="700" letter-spacing="4">ACADEMY</text>
+</svg>

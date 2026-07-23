@@ -5,9 +5,9 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>ใบประกาศนียบัตร | PTS Learning</title>
 <script src="/comp/theme-boot.js"></script>
-<link rel="stylesheet" href="site.css?v=20260723k">
-<link rel="stylesheet" href="certificates.css?v=20260723k">
-<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@400;500;600;700&amp;family=Montserrat:wght@500;600;700;800&amp;family=Sora:wght@600;700&amp;display=swap" rel="stylesheet">
+<link rel="stylesheet" href="site.css?v=20260723r">
+<link rel="stylesheet" href="certificates.css?v=20260723r">
+<link href="https://fonts.googleapis.com/css2?family=Libre+Baskerville:wght@400;700&amp;family=Sarabun:wght@300;400;600;700&amp;family=IBM+Plex+Sans+Thai:wght@400;500;600;700&amp;family=Sora:wght@600;700&amp;display=swap" rel="stylesheet">
 <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
 </head>
 <body class="pts-body cert-page">
@@ -55,8 +55,8 @@
 </div>
 
 <script>
-const PA_LOGO = '/assets/pa-academy-logo.svg';
-const PA_LOGO_FALLBACK = 'https://lh3.googleusercontent.com/aida/AP1WRLuMaoVMkkHPOqMuezhx_admymCweA1objiv0OHkPk-lTEzaUuVOlfWWBzt6yMdTNnZqQKzwO1q6jfoIdrhA_MQbNDdQvtgUzkqwMzriL4RqAW25IS6Kog1IFRW-TPC7jBiZb5CpAYL_V06l4Xekg0kGPa_LoMJwbVOmGSgp4FsJkui_aupBGRggcJ-Z2bc784Hf3Rz-g401nq9ei08h0a64KIgoSi5j1LwgO5ZBAIf0vHREbfvD0R5v2sc';
+const PA_LOGO = '/assets/pa-cert-logo.svg';
+const PA_STAMP = '/assets/pa-cert-stamp.svg';
 const escapeHtml = (t) => String(t || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 
 let userName = '';
@@ -74,61 +74,54 @@ function formatCertDate(issuedAt) {
   return `${dd}/${mm}/${yyyy}`;
 }
 
-/** Official PA Academy certificate layout (matches print template) */
+/** Official PA Academy certificate — template with dynamic name / course / date */
 function certificateHtml({ userName, courseName, issuedAt }) {
   const dateText = formatCertDate(issuedAt);
-  const logoOnError = `this.onerror=null;this.src='${PA_LOGO_FALLBACK}'`;
+  const name = escapeHtml(userName || 'ผู้เรียน');
+  const course = escapeHtml(courseName || '');
   return `
     <article class="pts-cert" aria-label="Certificate of Completion">
-      <div class="pts-cert__border pts-cert__border--outer" aria-hidden="true"></div>
-      <div class="pts-cert__border pts-cert__border--inner" aria-hidden="true"></div>
-      <div class="pts-cert__waves" aria-hidden="true"></div>
+      <div class="pts-cert__frame">
+        <div class="pts-cert__ornament pts-cert__ornament--tl" aria-hidden="true"></div>
+        <div class="pts-cert__ornament pts-cert__ornament--tr" aria-hidden="true"></div>
+        <div class="pts-cert__ornament pts-cert__ornament--bl" aria-hidden="true"></div>
+        <div class="pts-cert__ornament pts-cert__ornament--br" aria-hidden="true"></div>
 
-      <div class="pts-cert__ribbon" aria-hidden="true">
-        <span class="pts-cert__ribbon-fold"></span>
-      </div>
+        <div class="pts-cert__watermark" aria-hidden="true">PA ACADEMY</div>
 
-      <div class="pts-cert__corner pts-cert__corner--tr" aria-hidden="true">
-        <svg viewBox="0 0 160 160" xmlns="http://www.w3.org/2000/svg" focusable="false">
-          <polygon points="160,0 160,160 0,0" fill="#c9a227"/>
-          <polygon points="160,0 160,118 42,0" fill="#d32f2f"/>
-          <polygon points="160,0 160,72 88,0" fill="#b71c1c"/>
-          <polygon points="160,0 160,36 124,0" fill="#c9a227"/>
-        </svg>
-      </div>
-      <div class="pts-cert__corner pts-cert__corner--bl" aria-hidden="true">
-        <svg viewBox="0 0 160 160" xmlns="http://www.w3.org/2000/svg" focusable="false">
-          <polygon points="0,160 0,0 160,160" fill="#c9a227"/>
-          <polygon points="0,160 0,42 118,160" fill="#d32f2f"/>
-          <polygon points="0,160 0,88 72,160" fill="#b71c1c"/>
-          <polygon points="0,160 0,124 36,160" fill="#c9a227"/>
-        </svg>
-      </div>
+        <div class="pts-cert__ribbon" aria-hidden="true"></div>
 
-      <div class="pts-cert__inner">
-        <div class="pts-cert__brand">
-          <img class="pts-cert__logo" src="${PA_LOGO}" alt="Personal Assistant Academy" width="120" height="72" onerror="${logoOnError}">
-          <p class="pts-cert__brand-name">PERSONAL ASSISTANT ACADEMY</p>
+        <div class="pts-cert__tr-bg" aria-hidden="true"></div>
+        <div class="pts-cert__tr-gold" aria-hidden="true"></div>
+        <div class="pts-cert__tr" aria-hidden="true"></div>
+        <div class="pts-cert__tr-inner" aria-hidden="true"></div>
+
+        <div class="pts-cert__bl-bg" aria-hidden="true"></div>
+        <div class="pts-cert__bl-gold" aria-hidden="true"></div>
+        <div class="pts-cert__bl" aria-hidden="true"></div>
+        <div class="pts-cert__bl-inner" aria-hidden="true"></div>
+
+        <div class="pts-cert__logo-wrap">
+          <img class="pts-cert__logo" src="${PA_LOGO}" alt="Personal Assistant Academy" width="200" height="50">
         </div>
 
-        <h2 class="pts-cert__title">CERTIFICATE OF COMPLETION</h2>
-
-        <div class="pts-cert__ornament" aria-hidden="true">
-          <span class="pts-cert__ornament-line"></span>
-          <span class="pts-cert__ornament-knot"></span>
-          <span class="pts-cert__ornament-line"></span>
+        <div class="pts-cert__content">
+          <div class="pts-cert__heading">CERTIFICATE OF COMPLETION</div>
+          <div class="pts-cert__divider" aria-hidden="true"></div>
+          <div class="pts-cert__presented">PROUDLY PRESENTED TO :</div>
+          <div class="pts-cert__recipient">
+            <h2 class="pts-cert__name">${name}</h2>
+          </div>
+          <p class="pts-cert__course">${course}</p>
+          <div class="pts-cert__date-wrap">
+            <div class="pts-cert__date-label">Date / วันที่</div>
+            <div class="pts-cert__date">${escapeHtml(dateText)}</div>
+          </div>
         </div>
 
-        <p class="pts-cert__presented">PROUDLY PRESENTED TO :</p>
-        <h3 class="pts-cert__name">${escapeHtml(userName || 'ผู้เรียน')}</h3>
-        <div class="pts-cert__name-rule" aria-hidden="true"></div>
-        <p class="pts-cert__course">${escapeHtml(courseName || '')}</p>
-        <p class="pts-cert__date">${escapeHtml(dateText)}</p>
-
-        <div class="pts-cert__sign">
-          <img class="pts-cert__sign-mark" src="${PA_LOGO}" alt="" aria-hidden="true" onerror="${logoOnError}">
-          <div class="pts-cert__sign-line" aria-hidden="true"></div>
-          <p class="pts-cert__sign-label">PA ACADEMY</p>
+        <div class="pts-cert__footer">
+          <img class="pts-cert__stamp" src="${PA_STAMP}" alt="" aria-hidden="true" width="120" height="65">
+          <div class="pts-cert__sign-line">PA ACADEMY</div>
         </div>
       </div>
     </article>`;

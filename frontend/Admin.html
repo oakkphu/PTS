@@ -685,10 +685,10 @@ async function renderBanners() {
         <h3 class="ban-preview__title" id="bp-title"></h3>
         <p class="ban-preview__lead" id="bp-lead">${escapeHtml(s.lead || 'คำอธิบายสั้นจะโผล่ตรงนี้')}</p>
       </div>
-      <img class="ban-preview__img" id="bp-img" alt="" src="${escapeHtml(s.image_url || '')}"
-        onerror="this.onerror=null;this.src='https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&amp;fit=crop&amp;w=1200&amp;q=80';this.style.opacity='0.85'">
+      <img class="ban-preview__img" id="bp-img" alt="" src="${escapeHtml(s.image_url || '/assets/hero-fallback.png')}"
+        onerror="this.onerror=null;this.src='/assets/hero-fallback.png';this.style.opacity='1'">
     </div>
-    ${s.image_missing ? '<p class="text-xs text-amber-700 mb-3">ไฟล์รูปเดิมบนเครื่องหาย — ระบบใช้รูปสำรองชั่วคราว กรุณาอัปโหลดใหม่แล้วบันทึก</p>' : ''}
+    ${s.image_missing ? '<p class="text-xs text-amber-700 mb-3">ไฟล์รูปเดิมใช้ไม่ได้ — ระบบใช้รูปในโปรเจกต์ชั่วคราว กรุณาอัปโหลดใหม่แล้วบันทึก</p>' : ''}
 
     <div class="ban-field mb-3">
       <label>รูปแบนเนอร์</label>
@@ -785,6 +785,7 @@ async function renderBanners() {
     <div class="ban-wrap">
       <div class="ban-card">
         <h2 class="font-bold text-lg mb-1" id="b-form-title">เพิ่มแบนเนอร์หน้าแรก</h2>
+        <p class="text-sm text-on-surface-variant mb-4">อัปเดตรูปในเครื่องแล้ว (build 20260723c) — รูปใช้จากโฟลเดอร์โปรเจกต์ ไม่พึ่งลิงก์ภายนอก</p>
         <p class="text-sm text-on-surface-variant mb-4">เลือกสี → อัปโหลดรูป → ใส่หัวข้อ → กดบันทึก · เปลี่ยนสีจากรายการด้านล่างได้ทันทีโดยไม่ต้องเปิดแก้ไข</p>
         <div id="b-form">${formHtml()}</div>
       </div>
@@ -792,12 +793,12 @@ async function renderBanners() {
         <h3 class="font-bold mb-3">รายการแบนเนอร์ (${data.length})</h3>
         <div class="space-y-3">${data.map((s) => `
           <div class="ban-list-item${!s.flag_use ? ' is-hidden' : ''}" data-slide-id="${s.slide_id}">
-            <img src="${escapeHtml(s.image_url || '')}" alt="" class="w-full h-28 object-cover rounded-xl bg-gray-100" style="object-position:center 14%" onerror="this.onerror=null;this.src='https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&amp;fit=crop&amp;w=400&amp;q=80'">
+            <img src="${escapeHtml(s.image_url || '/assets/hero-fallback.png')}" alt="" class="w-full h-28 object-cover rounded-xl bg-gray-100" style="object-position:center 14%" onerror="this.onerror=null;this.src='/assets/hero-fallback.png'">
             <div class="min-w-0">
-              <p class="text-xs text-on-surface-variant mb-1">ลำดับ ${s.sort_order} · #${s.slide_id} · ${s.flag_use ? 'แสดง' : 'ซ่อน'} · ${themeLabel(s)}${s.image_missing ? ' · รูปหาย' : ''}</p>
+              <p class="text-xs text-on-surface-variant mb-1">ลำดับ ${s.sort_order} · #${s.slide_id} · ${s.flag_use ? 'แสดง' : 'ซ่อน'} · ${themeLabel(s)}${s.image_missing ? ' · รูปสำรอง' : ''}</p>
               <p class="font-bold truncate">${escapeHtml(s.eyebrow || '—')}</p>
               <p class="text-sm truncate">${escapeHtml(s.title)}</p>
-              ${s.image_missing ? '<p class="text-xs text-amber-700 mt-1">ไฟล์รูปในเครื่องหาย — กดแก้ไขแล้วอัปโหลดใหม่</p>' : ''}
+              ${s.image_missing ? '<p class="text-xs text-amber-700 mt-1">รูปเดิมใช้ไม่ได้ — กดแก้ไขแล้วอัปโหลดใหม่</p>' : ''}
               <div class="ban-mini-themes" role="group" aria-label="เปลี่ยนสีแบนเนอร์">
                 ${themeOptions.filter((t) => t.value !== 'custom').map((t) => `
                   <button type="button" data-theme="${t.value}" data-quick-theme="${s.slide_id}"

@@ -3,7 +3,8 @@
         <script src="/comp/theme-boot.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@300;400;500;600;700&amp;family=Sora:wght@500;600;700&amp;display=swap" rel="stylesheet">
         <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=block" rel="stylesheet">
-        <link rel="stylesheet" href="site.css?v=20260723a">
+        <link rel="stylesheet" href="site.css?v=20260723c">
+        <!-- pts-build:20260723c-local-hero -->
         <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
         <script id="tailwind-config">try{
                 tailwind.config = {
@@ -148,7 +149,23 @@
   <div class="pts-hero-banner__stage" id="hero-stage-wrap" data-pts-hero-tilt>
     <div class="pts-hero-banner__shine" aria-hidden="true"></div>
     <div class="pts-hero-banner__glint" aria-hidden="true"></div>
-    <div class="pts-hero-banner__viewport" id="hero-stage"></div>
+    <div class="pts-hero-banner__viewport" id="hero-stage">
+    <!-- โชว์รูปทันทีก่อน JS โหลดสไลด์จาก API -->
+    <article class="pts-hero-banner__panel is-active" data-slide="0" aria-hidden="false">
+      <div class="pts-hero-banner__inner">
+        <div class="pts-hero-banner__copy">
+          <p class="pts-hero-banner__eyebrow">PTS Learning</p>
+          <h1 class="pts-hero-banner__title">ยกระดับทักษะ <span>Personal Assistant</span></h1>
+          <p class="pts-hero-banner__lead">กำลังโหลดแบนเนอร์…</p>
+        </div>
+        <div class="pts-hero-banner__media">
+          <figure class="pts-hero-banner__frame">
+            <img src="/assets/hero-fallback.png" alt="PTS Learning" width="960" height="1200" decoding="async" style="object-position:center 14%" fetchpriority="high">
+          </figure>
+        </div>
+      </div>
+    </article>
+  </div>
     <div class="pts-hero-banner__nav" role="group" aria-label="สลับแบนเนอร์">
       <button type="button" class="pts-hero-banner__arrow" id="hero-prev" aria-label="แบนเนอร์ก่อนหน้า">
         <span class="material-symbols-outlined">chevron_left</span>
@@ -570,7 +587,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                   alt="${escapeHtml(slide.image_alt || '')}"
                   width="960" height="1200" decoding="async"
                   style="object-position:center 14%"
-                  onerror="this.onerror=null;this.src='https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&amp;fit=crop&amp;w=1200&amp;q=80';"
+                  onerror="this.onerror=null;this.src='/assets/hero-fallback.png';"
                   ${index === 0 ? 'fetchpriority="high"' : 'loading="lazy"'}>
               </figure>
               ${badge}
@@ -605,7 +622,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             <div class="pts-hero-banner__media">
               <figure class="pts-hero-banner__frame">
                 <img
-                  src="https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&amp;fit=crop&amp;w=1200&amp;q=80"
+                  src="/assets/hero-fallback.png"
                   alt="PTS Learning"
                   width="960" height="1200" decoding="async"
                   style="object-position:center 14%"

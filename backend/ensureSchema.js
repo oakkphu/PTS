@@ -161,6 +161,10 @@ async function ensureLearningSchema(pool) {
 
     await seedHeroSlidesIfEmpty(pool);
     await ensureHeroSlideThemes(pool);
+    try {
+        const { repairHeroSlideImages } = require('./heroImages');
+        await repairHeroSlideImages(pool);
+    } catch (_) { /* ignore */ }
 }
 
 async function ensureHeroSlideThemes(pool) {
@@ -202,7 +206,7 @@ async function seedHeroSlidesIfEmpty(pool) {
             cta_primary_href: 'Courses.html',
             cta_secondary_label: 'สมัครสมาชิก',
             cta_secondary_href: 'Register.html',
-            image_url: 'https://lh3.googleusercontent.com/aida-public/AB6AXuAL1bLgj4_cdFQwufD7fHr7mIzwwLX1eg6KHtRGNWkUYTSFBNEzOkfgN5Bpvqx4pzCO1HDdnOeKyf9kSglaEJZ0oilzaKD-actnGqN9yHVSPnMsVEePg6HbyhjRFyukb2cFtg15dFQG8pw7GhjRJ6qCiFxBqsOU9FtRQjAWKZJHfKjZIdK__xUHPQGyylmAfalj9Psv-EiJd16IvIbdHQRwdmdkZQgSL50gh22cqBbgCWExhU_x5NFwAg',
+            image_url: '/assets/hero-1.png',
             image_alt: 'ผู้ช่วยมืออาชีพทำงานที่โต๊ะด้วยแล็ปท็อป',
             badge_icon: 'check_circle',
             badge_title: 'Certified',
@@ -219,7 +223,7 @@ async function seedHeroSlidesIfEmpty(pool) {
             cta_primary_href: 'Courses.html?mode=online',
             cta_secondary_label: 'สมัครสมาชิก',
             cta_secondary_href: 'Register.html',
-            image_url: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&w=1200&q=80',
+            image_url: '/assets/hero-2.png',
             image_alt: 'ผู้เชี่ยวชาญวางแผนงานอย่างมืออาชีพ',
             badge_icon: 'schedule',
             badge_title: 'Flexible',
@@ -236,7 +240,7 @@ async function seedHeroSlidesIfEmpty(pool) {
             cta_primary_href: 'Certificates.html',
             cta_secondary_label: 'เข้าคอมมูนิตี้',
             cta_secondary_href: 'Community.html',
-            image_url: 'https://images.unsplash.com/photo-1551836022-d5d88e9218df?auto=format&fit=crop&w=1200&q=80',
+            image_url: '/assets/hero-3.png',
             image_alt: 'ทีมงานประชุมพัฒนาทักษะการทำงาน',
             badge_icon: 'workspace_premium',
             badge_title: 'Certificate',

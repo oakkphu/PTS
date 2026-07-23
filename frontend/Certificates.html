@@ -5,8 +5,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>ใบประกาศนียบัตร | PTS Learning</title>
 <script src="/comp/theme-boot.js"></script>
-<link rel="stylesheet" href="site.css?v=20260723r">
-<link rel="stylesheet" href="certificates.css?v=20260723r">
+<link rel="stylesheet" href="site.css?v=20260723s">
+<link rel="stylesheet" href="certificates.css?v=20260723s">
 <link href="https://fonts.googleapis.com/css2?family=Libre+Baskerville:wght@400;700&amp;family=Sarabun:wght@300;400;600;700&amp;family=IBM+Plex+Sans+Thai:wght@400;500;600;700&amp;family=Sora:wght@600;700&amp;display=swap" rel="stylesheet">
 <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
 </head>
@@ -55,8 +55,8 @@
 </div>
 
 <script>
-const PA_LOGO = '/assets/pa-cert-logo.svg';
-const PA_STAMP = '/assets/pa-cert-stamp.svg';
+const PA_LOGO = '/assets/pa-cert-logo.png';
+const PA_STAMP = '/assets/pa-cert-stamp.png';
 const escapeHtml = (t) => String(t || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 
 let userName = '';
@@ -102,7 +102,7 @@ function certificateHtml({ userName, courseName, issuedAt }) {
         <div class="pts-cert__bl-inner" aria-hidden="true"></div>
 
         <div class="pts-cert__logo-wrap">
-          <img class="pts-cert__logo" src="${PA_LOGO}" alt="Personal Assistant Academy" width="200" height="50">
+          <img class="pts-cert__logo" src="${PA_LOGO}" alt="Personal Assistant Academy" width="220" height="80" decoding="async">
         </div>
 
         <div class="pts-cert__content">
@@ -120,11 +120,22 @@ function certificateHtml({ userName, courseName, issuedAt }) {
         </div>
 
         <div class="pts-cert__footer">
-          <img class="pts-cert__stamp" src="${PA_STAMP}" alt="" aria-hidden="true" width="120" height="65">
+          <img class="pts-cert__stamp" src="${PA_STAMP}" alt="PA Academy stamp" width="120" height="120" decoding="async">
           <div class="pts-cert__sign-line">PA ACADEMY</div>
         </div>
       </div>
     </article>`;
+}
+
+function fitCertPreview(root) {
+  if (!root) return;
+  const cert = root.querySelector('.pts-cert');
+  if (!cert) return;
+  const avail = Math.max(280, root.clientWidth - 8);
+  const scale = Math.min(1, avail / 1122);
+  cert.style.transform = `scale(${scale})`;
+  cert.style.transformOrigin = 'top center';
+  root.style.height = `${Math.ceil(794 * scale)}px`;
 }
 
 function modeTag(mode) {
@@ -154,14 +165,13 @@ function openCert(cert) {
   root.innerHTML = certificateHtml({
     userName,
     courseName: cert.course_name,
-    issuedAt: cert.issued_at,
-    certificateCode: cert.certificate_code,
-    instructorName: cert.instructor_name
+    issuedAt: cert.issued_at
   });
   const modal = document.getElementById('cert-modal');
   modal.classList.add('is-open');
   modal.setAttribute('aria-hidden', 'false');
   document.body.style.overflow = 'hidden';
+  requestAnimationFrame(() => fitCertPreview(root));
 }
 
 function closeCert() {
@@ -214,9 +224,7 @@ function render() {
     const preview = certificateHtml({
       userName,
       courseName: c.course_name,
-      issuedAt: c.issued_at,
-      certificateCode: c.certificate_code,
-      instructorName: c.instructor_name
+      issuedAt: c.issued_at
     });
     return `
       <article class="cert-card">
@@ -230,7 +238,7 @@ function render() {
           <div class="cert-card__actions">
             <button type="button" class="pts-btn pts-btn-primary cert-download" data-id="${c.certificate_id}">
               <span class="material-symbols-outlined" style="font-size:18px">download</span>
-              ดาวน์โหลด PDF
+              ดู / ดาวน์โหลด PDF
             </button>
             <button type="button" class="cert-share" data-id="${c.certificate_id}" aria-label="แชร์ใบประกาศ">
               <span class="material-symbols-outlined">share</span>
@@ -248,6 +256,8 @@ function render() {
     </aside>`;
 
   grid.innerHTML = cards + teaser;
+
+  grid.querySelectorAll('.cert-card__preview-scale').forEach((el) => fitCertPreview(el));
 
   grid.querySelectorAll('.cert-download').forEach((btn) => {
     btn.onclick = () => {
@@ -292,12 +302,28 @@ async function init() {
     };
   });
   document.getElementById('cert-close-btn').onclick = closeCert;
-  document.getElementById('cert-print-btn').onclick = () => window.print();
+  document.getElementById('cert-print-btn').onclick = () => {
+    const root = document.getElementById('cert-print-root');
+    const cert = root && root.querySelector('.pts-cert');
+    if (cert) {
+      cert.style.transform = 'none';
+      root.style.height = '';
+    }
+    window.print();
+    requestAnimationFrame(() => fitCertPreview(root));
+  };
   document.getElementById('cert-modal').addEventListener('click', (e) => {
     if (e.target.id === 'cert-modal') closeCert();
   });
   document.addEventListener('keydown', (e) => {
     if (e.key === 'Escape') closeCert();
+  });
+  window.addEventListener('resize', () => {
+    document.querySelectorAll('.cert-card__preview-scale').forEach((el) => fitCertPreview(el));
+    const modal = document.getElementById('cert-modal');
+    if (modal && modal.classList.contains('is-open')) {
+      fitCertPreview(document.getElementById('cert-print-root'));
+    }
   });
 }
 

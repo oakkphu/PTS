@@ -1,6 +1,101 @@
 const express = require('express');
 const sql = require('mssql');
-const { seedLessonsIfEmpty } = require('./ensureSchema');
+const path = require('path');
+const fs = require('fs');
+const multer = require('multer');
+const { writeSecretsFile, readSecretsFile, readLocalMail, publicMailStatus } = require('./mailSecrets');
+const { issueEmailOtp, getMailStatus } = require('./emailOtp');
+const { syncScheduleToEnrolledUsers, removeScheduleFromAllCalendars } = require('./googleCalendar');
+
+const HERO_DIR = path.join(__dirname, '..', 'uploads', 'hero');
+const HERO_MIME = new Set(['image/jpeg', 'image/png', 'image/webp', 'image/gif']);
+const HERO_ICONS = new Set([
+    'check_circle', 'schedule', 'workspace_premium', 'school', 'star', 'verified',
+    'auto_awesome', 'groups', 'event', 'menu_book', 'psychology', 'handshake'
+]);
+const HERO_THEMES = new Set(['rose', 'sage', 'gold', 'ink', 'ocean', 'sunset', 'custom']);
+
+function normalizeHexColor(value) {
+    const raw = String(value || '').trim();
+    const m = raw.match(/^#?([0-9a-fA-F]{6})$/);
+    if (!m) return null;
+    return `#${m[1].toLowerCase()}`;
+}
+
+function ensureHeroDir() {
+    fs.mkdirSync(HERO_DIR, { recursive: true });
+}
+
+const heroUpload = multer({
+    storage: multer.diskStorage({
+        destination: (_req, _file, cb) => {
+            ensureHeroDir();
+            cb(null, HERO_DIR);
+        },
+        filename: (_req, file, cb) => {
+            const ext = path.extname(file.originalname || '').toLowerCase();
+            const safeExt = ['.jpg', '.jpeg', '.png', '.webp', '.gif'].includes(ext)
+                ? (ext === '.jpeg' ? '.jpg' : ext)
+                : '.jpg';
+            cb(null, `hero-${Date.now()}${safeExt}`);
+        }
+    }),
+    limits: { fileSize: 5 * 1024 * 1024 },
+    fileFilter: (_req, file, cb) => {
+        if (HERO_MIME.has(String(file.mimetype || '').toLowerCase())) cb(null, true);
+        else cb(new Error('รองรับเฉพาะไฟล์รูป JPG, PNG, WEBP หรือ GIF'));
+    }
+});
+
+function normalizeHeroBody(body = {}) {
+    const icon = String(body.badge_icon || '').trim() || 'check_circle';
+    let theme = String(body.theme || '').trim().toLowerCase() || 'rose';
+    if (!HERO_THEMES.has(theme)) theme = 'rose';
+    const themeColor = normalizeHexColor(body.theme_color || body.themeColor || '');
+    if (theme === 'custom' && !themeColor) {
+        theme = 'rose';
+    }
+    return {
+        sort_order: Math.max(1, parseInt(body.sort_order, 10) || 1),
+        eyebrow: String(body.eyebrow || '').trim() || null,
+        title: String(body.title || '').trim(),
+        title_highlight: String(body.title_highlight || '').trim() || null,
+        lead: String(body.lead || '').trim() || null,
+        cta_primary_label: String(body.cta_primary_label || '').trim() || null,
+        cta_primary_href: String(body.cta_primary_href || '').trim() || null,
+        cta_secondary_label: String(body.cta_secondary_label || '').trim() || null,
+        cta_secondary_href: String(body.cta_secondary_href || '').trim() || null,
+        image_url: String(body.image_url || '').trim() || null,
+        image_alt: String(body.image_alt || '').trim() || null,
+        badge_icon: HERO_ICONS.has(icon) ? icon : 'check_circle',
+        badge_title: String(body.badge_title || '').trim() || null,
+        badge_subtitle: String(body.badge_subtitle || '').trim() || null,
+        theme,
+        theme_color: theme === 'custom' ? themeColor : (themeColor || null),
+        flag_use: body.flag_use === false || body.flag_use === 0 || body.flag_use === '0' ? 0 : 1
+    };
+}
+
+function bindHeroInputs(request, data) {
+    return request
+        .input('sort_order', sql.Int, data.sort_order)
+        .input('eyebrow', sql.NVarChar, data.eyebrow)
+        .input('title', sql.NVarChar, data.title)
+        .input('title_highlight', sql.NVarChar, data.title_highlight)
+        .input('lead', sql.NVarChar, data.lead)
+        .input('cta_primary_label', sql.NVarChar, data.cta_primary_label)
+        .input('cta_primary_href', sql.NVarChar, data.cta_primary_href)
+        .input('cta_secondary_label', sql.NVarChar, data.cta_secondary_label)
+        .input('cta_secondary_href', sql.NVarChar, data.cta_secondary_href)
+        .input('image_url', sql.NVarChar, data.image_url)
+        .input('image_alt', sql.NVarChar, data.image_alt)
+        .input('badge_icon', sql.NVarChar, data.badge_icon)
+        .input('badge_title', sql.NVarChar, data.badge_title)
+        .input('badge_subtitle', sql.NVarChar, data.badge_subtitle)
+        .input('theme', sql.NVarChar, data.theme)
+        .input('theme_color', sql.NVarChar, data.theme_color)
+        .input('flag_use', sql.Bit, data.flag_use);
+}
 
 function createAdminRouter({ poolPromise, requireLogin }) {
     const router = express.Router();
@@ -100,7 +195,7 @@ function createAdminRouter({ poolPromise, requireLogin }) {
         } = req.body;
 
         if (!course_name) {
-            return res.status(400).json({ success: false, message: 'กรุณาระบุชื่อคอร์ส' });
+            return res.status(400).json({ success: false, message: 'กรุณาระบุชื่อหลักสูตร' });
         }
 
         try {
@@ -122,8 +217,7 @@ function createAdminRouter({ poolPromise, requireLogin }) {
                 `);
 
             const created = result.recordset[0];
-            await seedLessonsIfEmpty(pool, created.course_id, created.course_name);
-            res.json({ success: true, message: 'สร้างคอร์สสำเร็จ', data: created });
+            res.json({ success: true, message: 'สร้างหลักสูตรสำเร็จ', data: created });
         } catch (error) {
             res.status(500).json({ success: false, message: error.message });
         }
@@ -132,7 +226,7 @@ function createAdminRouter({ poolPromise, requireLogin }) {
     router.put('/courses/:courseId', async (req, res) => {
         if (!requireAdmin(req, res)) return;
         const courseId = parseInt(req.params.courseId, 10);
-        if (!courseId) return res.status(400).json({ success: false, message: 'รหัสคอร์สไม่ถูกต้อง' });
+        if (!courseId) return res.status(400).json({ success: false, message: 'รหัสหลักสูตรไม่ถูกต้อง' });
 
         const {
             course_name, instructor_name, delivery_mode, difficulty_level,
@@ -162,7 +256,7 @@ function createAdminRouter({ poolPromise, requireLogin }) {
                         is_featured = COALESCE(@featured, is_featured)
                     WHERE course_id = @courseId
                 `);
-            res.json({ success: true, message: 'อัปเดตคอร์สแล้ว' });
+            res.json({ success: true, message: 'อัปเดตหลักสูตรแล้ว' });
         } catch (error) {
             res.status(500).json({ success: false, message: error.message });
         }
@@ -173,7 +267,7 @@ function createAdminRouter({ poolPromise, requireLogin }) {
         const courseId = parseInt(req.params.courseId, 10);
         const { title, content_html, video_url, sort_order, duration_minutes } = req.body;
         if (!courseId || !title) {
-            return res.status(400).json({ success: false, message: 'กรุณาระบุคอร์สและชื่อบทเรียน' });
+            return res.status(400).json({ success: false, message: 'กรุณาระบุหลักสูตรและชื่อบทเรียน' });
         }
 
         try {
@@ -253,12 +347,15 @@ function createAdminRouter({ poolPromise, requireLogin }) {
         if (!title || !start_at || !end_at) {
             return res.status(400).json({ success: false, message: 'กรุณากรอกหัวข้อและเวลา' });
         }
+        if (!course_id) {
+            return res.status(400).json({ success: false, message: 'กรุณาเลือกหลักสูตรที่ผูกตาราง (จำเป็นสำหรับซิงค์ปฏิทินนักเรียน)' });
+        }
 
         try {
             const pool = await poolPromise;
             const result = await pool.request()
                 .input('title', sql.NVarChar, title)
-                .input('courseId', sql.Int, course_id ? Number(course_id) : null)
+                .input('courseId', sql.Int, Number(course_id))
                 .input('startAt', sql.DateTime, new Date(start_at))
                 .input('endAt', sql.DateTime, new Date(end_at))
                 .input('location', sql.NVarChar, location || null)
@@ -270,6 +367,8 @@ function createAdminRouter({ poolPromise, requireLogin }) {
                     OUTPUT INSERTED.schedule_id
                     VALUES (@courseId, @title, @startAt, @endAt, @location, @meeting, @mode, 1)
                 `);
+            const scheduleId = result.recordset[0].schedule_id;
+            syncScheduleToEnrolledUsers(pool, scheduleId).catch(() => {});
             res.json({ success: true, message: 'เพิ่มตารางเรียนแล้ว', data: result.recordset[0] });
         } catch (error) {
             res.status(500).json({ success: false, message: error.message });
@@ -284,6 +383,7 @@ function createAdminRouter({ poolPromise, requireLogin }) {
             await pool.request()
                 .input('scheduleId', sql.Int, scheduleId)
                 .query(`UPDATE BD_PTS.dbo.class_schedules SET flag_use = 0 WHERE schedule_id = @scheduleId`);
+            removeScheduleFromAllCalendars(pool, scheduleId).catch(() => {});
             res.json({ success: true, message: 'ลบตารางเรียนแล้ว' });
         } catch (error) {
             res.status(500).json({ success: false, message: error.message });
@@ -336,6 +436,267 @@ function createAdminRouter({ poolPromise, requireLogin }) {
             `);
             res.json({ success: true, data: result.recordset });
         } catch (error) {
+            res.status(500).json({ success: false, message: error.message });
+        }
+    });
+
+    // —— Home hero slides ——
+    router.get('/hero-slides', async (req, res) => {
+        if (!requireAdmin(req, res)) return;
+        try {
+            const pool = await poolPromise;
+            const result = await pool.request().query(`
+                SELECT
+                    slide_id, sort_order, eyebrow, title, title_highlight, lead,
+                    cta_primary_label, cta_primary_href, cta_secondary_label, cta_secondary_href,
+                    image_url, image_alt, badge_icon, badge_title, badge_subtitle, theme, theme_color,
+                    flag_use, created_at, updated_at
+                FROM BD_PTS.dbo.hero_slides
+                ORDER BY sort_order ASC, slide_id ASC
+            `);
+            res.json({ success: true, data: result.recordset });
+        } catch (error) {
+            res.status(500).json({ success: false, message: error.message });
+        }
+    });
+
+    router.post('/hero-slides', async (req, res) => {
+        if (!requireAdmin(req, res)) return;
+        const data = normalizeHeroBody(req.body);
+        if (!data.title) {
+            return res.status(400).json({ success: false, message: 'กรุณาระบุหัวข้อแบนเนอร์' });
+        }
+        try {
+            const pool = await poolPromise;
+            const result = await bindHeroInputs(pool.request(), data).query(`
+                INSERT INTO BD_PTS.dbo.hero_slides (
+                    sort_order, eyebrow, title, title_highlight, lead,
+                    cta_primary_label, cta_primary_href, cta_secondary_label, cta_secondary_href,
+                    image_url, image_alt, badge_icon, badge_title, badge_subtitle, theme, theme_color, flag_use
+                )
+                OUTPUT INSERTED.slide_id
+                VALUES (
+                    @sort_order, @eyebrow, @title, @title_highlight, @lead,
+                    @cta_primary_label, @cta_primary_href, @cta_secondary_label, @cta_secondary_href,
+                    @image_url, @image_alt, @badge_icon, @badge_title, @badge_subtitle, @theme, @theme_color, @flag_use
+                )
+            `);
+            res.json({ success: true, message: 'เพิ่มแบนเนอร์แล้ว', data: result.recordset[0] });
+        } catch (error) {
+            res.status(500).json({ success: false, message: error.message });
+        }
+    });
+
+    router.put('/hero-slides/:slideId', async (req, res) => {
+        if (!requireAdmin(req, res)) return;
+        const slideId = parseInt(req.params.slideId, 10);
+        if (!slideId) return res.status(400).json({ success: false, message: 'รหัสแบนเนอร์ไม่ถูกต้อง' });
+        const data = normalizeHeroBody(req.body);
+        if (!data.title) {
+            return res.status(400).json({ success: false, message: 'กรุณาระบุหัวข้อแบนเนอร์' });
+        }
+        try {
+            const pool = await poolPromise;
+            const result = await bindHeroInputs(pool.request(), data)
+                .input('slideId', sql.Int, slideId)
+                .query(`
+                    UPDATE BD_PTS.dbo.hero_slides
+                    SET sort_order = @sort_order,
+                        eyebrow = @eyebrow,
+                        title = @title,
+                        title_highlight = @title_highlight,
+                        lead = @lead,
+                        cta_primary_label = @cta_primary_label,
+                        cta_primary_href = @cta_primary_href,
+                        cta_secondary_label = @cta_secondary_label,
+                        cta_secondary_href = @cta_secondary_href,
+                        image_url = @image_url,
+                        image_alt = @image_alt,
+                        badge_icon = @badge_icon,
+                        badge_title = @badge_title,
+                        badge_subtitle = @badge_subtitle,
+                        theme = @theme,
+                        theme_color = @theme_color,
+                        flag_use = @flag_use,
+                        updated_at = GETDATE()
+                    WHERE slide_id = @slideId
+                `);
+            if (!result.rowsAffected[0]) {
+                return res.status(404).json({ success: false, message: 'ไม่พบแบนเนอร์' });
+            }
+            res.json({ success: true, message: 'บันทึกแบนเนอร์แล้ว' });
+        } catch (error) {
+            res.status(500).json({ success: false, message: error.message });
+        }
+    });
+
+    router.delete('/hero-slides/:slideId', async (req, res) => {
+        if (!requireAdmin(req, res)) return;
+        const slideId = parseInt(req.params.slideId, 10);
+        if (!slideId) return res.status(400).json({ success: false, message: 'รหัสแบนเนอร์ไม่ถูกต้อง' });
+        try {
+            const pool = await poolPromise;
+            await pool.request()
+                .input('slideId', sql.Int, slideId)
+                .query(`
+                    UPDATE BD_PTS.dbo.hero_slides
+                    SET flag_use = 0, updated_at = GETDATE()
+                    WHERE slide_id = @slideId
+                `);
+            res.json({ success: true, message: 'ซ่อนแบนเนอร์แล้ว' });
+        } catch (error) {
+            res.status(500).json({ success: false, message: error.message });
+        }
+    });
+
+    // เปลี่ยนสี / แสดง-ซ่อน แบบเร็ว โดยไม่ต้องส่งฟอร์มทั้งชุด
+    router.patch('/hero-slides/:slideId', async (req, res) => {
+        if (!requireAdmin(req, res)) return;
+        const slideId = parseInt(req.params.slideId, 10);
+        if (!slideId) return res.status(400).json({ success: false, message: 'รหัสแบนเนอร์ไม่ถูกต้อง' });
+
+        const sets = [];
+        const inputs = [];
+
+        if (req.body.theme != null) {
+            const theme = String(req.body.theme || '').trim().toLowerCase();
+            if (!HERO_THEMES.has(theme)) {
+                return res.status(400).json({ success: false, message: 'ธีมสีไม่ถูกต้อง' });
+            }
+            sets.push('theme = @theme');
+            inputs.push(['theme', sql.NVarChar, theme]);
+        }
+        if (req.body.theme_color != null || req.body.themeColor != null) {
+            const raw = req.body.theme_color != null ? req.body.theme_color : req.body.themeColor;
+            if (String(raw || '').trim() === '') {
+                sets.push('theme_color = @theme_color');
+                inputs.push(['theme_color', sql.NVarChar, null]);
+            } else {
+                const themeColor = normalizeHexColor(raw);
+                if (!themeColor) {
+                    return res.status(400).json({ success: false, message: 'รหัสสีไม่ถูกต้อง (ใช้เช่น #974258)' });
+                }
+                sets.push('theme_color = @theme_color');
+                inputs.push(['theme_color', sql.NVarChar, themeColor]);
+                if (req.body.theme == null) {
+                    sets.push('theme = @theme');
+                    inputs.push(['theme', sql.NVarChar, 'custom']);
+                }
+            }
+        }
+        if (req.body.flag_use != null) {
+            const flag = req.body.flag_use === false || req.body.flag_use === 0 || req.body.flag_use === '0' ? 0 : 1;
+            sets.push('flag_use = @flag_use');
+            inputs.push(['flag_use', sql.Bit, flag]);
+        }
+        if (req.body.sort_order != null) {
+            const sort = Math.max(1, parseInt(req.body.sort_order, 10) || 1);
+            sets.push('sort_order = @sort_order');
+            inputs.push(['sort_order', sql.Int, sort]);
+        }
+        if (!sets.length) {
+            return res.status(400).json({ success: false, message: 'ไม่มีข้อมูลที่จะอัปเดต' });
+        }
+        sets.push('updated_at = GETDATE()');
+
+        try {
+            const pool = await poolPromise;
+            let request = pool.request().input('slideId', sql.Int, slideId);
+            inputs.forEach(([name, type, value]) => {
+                request = request.input(name, type, value);
+            });
+            const result = await request.query(`
+                UPDATE BD_PTS.dbo.hero_slides
+                SET ${sets.join(', ')}
+                WHERE slide_id = @slideId
+            `);
+            if (!result.rowsAffected[0]) {
+                return res.status(404).json({ success: false, message: 'ไม่พบแบนเนอร์' });
+            }
+            res.json({ success: true, message: 'อัปเดตแล้ว' });
+        } catch (error) {
+            res.status(500).json({ success: false, message: error.message });
+        }
+    });
+
+    router.post('/hero-slides/upload', (req, res) => {
+        if (!requireAdmin(req, res)) return;
+        heroUpload.single('image')(req, res, (err) => {
+            if (err) {
+                return res.status(400).json({ success: false, message: err.message || 'อัปโหลดไม่สำเร็จ' });
+            }
+            if (!req.file) {
+                return res.status(400).json({ success: false, message: 'กรุณาเลือกไฟล์รูป' });
+            }
+            res.json({ success: true, url: `/uploads/hero/${req.file.filename}` });
+        });
+    });
+
+    // สถานะการส่งอีเมล OTP
+    router.get('/mail', async (req, res) => {
+        if (!requireAdmin(req, res)) return;
+        const secrets = readSecretsFile();
+        const local = readLocalMail();
+        res.json({
+            success: true,
+            status: getMailStatus(),
+            form: {
+                mode: secrets.mode || local.mode || 'smtp',
+                smtpHost: secrets.smtpHost || local.smtpHost || 'smtp.gmail.com',
+                smtpPort: secrets.smtpPort || local.smtpPort || 587,
+                smtpSecure: !!(secrets.smtpSecure || local.smtpSecure),
+                smtpUser: secrets.smtpUser || local.smtpUser || '',
+                fromName: secrets.fromName || local.fromName || 'PTS Learning',
+                fromEmail: secrets.fromEmail || local.fromEmail || '',
+                hasSmtpPass: !!(secrets.smtpPass || local.smtpPass),
+                hasBrevoKey: !!(secrets.brevoApiKey || local.brevoApiKey)
+            }
+        });
+    });
+
+    // บันทึกค่าส่งอีเมลจริง (เก็บใน backend/mail.secrets.json)
+    router.put('/mail', async (req, res) => {
+        if (!requireAdmin(req, res)) return;
+        try {
+            const body = req.body || {};
+            writeSecretsFile({
+                mode: body.mode || 'auto',
+                smtpHost: body.smtpHost,
+                smtpPort: body.smtpPort,
+                smtpSecure: body.smtpSecure,
+                smtpUser: body.smtpUser,
+                smtpPass: body.smtpPass, // ว่าง = คงรหัสเดิม
+                brevoApiKey: body.brevoApiKey,
+                fromName: body.fromName,
+                fromEmail: body.fromEmail
+            });
+            res.json({
+                success: true,
+                message: 'บันทึกการตั้งค่าอีเมลแล้ว — OTP จะส่งเข้าอีเมลจริง',
+                status: publicMailStatus()
+            });
+        } catch (error) {
+            res.status(500).json({ success: false, message: error.message });
+        }
+    });
+
+    // ทดสอบส่ง OTP ไปอีเมลที่ระบุ
+    router.post('/mail/test', async (req, res) => {
+        if (!requireAdmin(req, res)) return;
+        const email = String(req.body.email || '').trim().toLowerCase();
+        if (!email || !email.includes('@')) {
+            return res.status(400).json({ success: false, message: 'กรุณาระบุอีเมลทดสอบ' });
+        }
+        try {
+            const issued = await issueEmailOtp(email, 'reset');
+            res.json({
+                success: true,
+                message: `ส่ง OTP ทดสอบไปที่ ${issued.masked} แล้ว (ผ่าน ${issued.mode})`,
+                mode: issued.mode,
+                masked_email: issued.masked
+            });
+        } catch (error) {
+            console.error('❌ mail test:', error.message);
             res.status(500).json({ success: false, message: error.message });
         }
     });

@@ -3,7 +3,7 @@
         <script src="/comp/theme-boot.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@300;400;500;600;700&amp;family=Sora:wght@500;600;700&amp;display=swap" rel="stylesheet">
         <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=block" rel="stylesheet">
-        <link rel="stylesheet" href="site.css?v=20260722k">
+        <link rel="stylesheet" href="site.css?v=20260723a">
         <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
         <script id="tailwind-config">try{
                 tailwind.config = {
@@ -570,6 +570,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                   alt="${escapeHtml(slide.image_alt || '')}"
                   width="960" height="1200" decoding="async"
                   style="object-position:center 14%"
+                  onerror="this.onerror=null;this.src='https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&amp;fit=crop&amp;w=1200&amp;q=80';"
                   ${index === 0 ? 'fetchpriority="high"' : 'loading="lazy"'}>
               </figure>
               ${badge}
@@ -600,6 +601,16 @@ document.addEventListener('DOMContentLoaded', async () => {
               <div class="pts-hero-banner__actions">
                 <a class="pts-btn pts-btn-primary pts-hero-banner__cta" href="Courses.html">ดูหลักสูตร</a>
               </div>
+            </div>
+            <div class="pts-hero-banner__media">
+              <figure class="pts-hero-banner__frame">
+                <img
+                  src="https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&amp;fit=crop&amp;w=1200&amp;q=80"
+                  alt="PTS Learning"
+                  width="960" height="1200" decoding="async"
+                  style="object-position:center 14%"
+                  fetchpriority="high">
+              </figure>
             </div>
           </div>
         </article>`;

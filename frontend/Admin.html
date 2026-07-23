@@ -686,8 +686,9 @@ async function renderBanners() {
         <p class="ban-preview__lead" id="bp-lead">${escapeHtml(s.lead || 'คำอธิบายสั้นจะโผล่ตรงนี้')}</p>
       </div>
       <img class="ban-preview__img" id="bp-img" alt="" src="${escapeHtml(s.image_url || '')}"
-        onerror="this.style.opacity='0.35'">
+        onerror="this.onerror=null;this.src='https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&amp;fit=crop&amp;w=1200&amp;q=80';this.style.opacity='0.85'">
     </div>
+    ${s.image_missing ? '<p class="text-xs text-amber-700 mb-3">ไฟล์รูปเดิมบนเครื่องหาย — ระบบใช้รูปสำรองชั่วคราว กรุณาอัปโหลดใหม่แล้วบันทึก</p>' : ''}
 
     <div class="ban-field mb-3">
       <label>รูปแบนเนอร์</label>
@@ -791,11 +792,12 @@ async function renderBanners() {
         <h3 class="font-bold mb-3">รายการแบนเนอร์ (${data.length})</h3>
         <div class="space-y-3">${data.map((s) => `
           <div class="ban-list-item${!s.flag_use ? ' is-hidden' : ''}" data-slide-id="${s.slide_id}">
-            <img src="${escapeHtml(s.image_url || '')}" alt="" class="w-full h-28 object-cover rounded-xl bg-gray-100" style="object-position:center 14%" onerror="this.style.display='none'">
+            <img src="${escapeHtml(s.image_url || '')}" alt="" class="w-full h-28 object-cover rounded-xl bg-gray-100" style="object-position:center 14%" onerror="this.onerror=null;this.src='https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&amp;fit=crop&amp;w=400&amp;q=80'">
             <div class="min-w-0">
-              <p class="text-xs text-on-surface-variant mb-1">ลำดับ ${s.sort_order} · #${s.slide_id} · ${s.flag_use ? 'แสดง' : 'ซ่อน'} · ${themeLabel(s)}</p>
+              <p class="text-xs text-on-surface-variant mb-1">ลำดับ ${s.sort_order} · #${s.slide_id} · ${s.flag_use ? 'แสดง' : 'ซ่อน'} · ${themeLabel(s)}${s.image_missing ? ' · รูปหาย' : ''}</p>
               <p class="font-bold truncate">${escapeHtml(s.eyebrow || '—')}</p>
               <p class="text-sm truncate">${escapeHtml(s.title)}</p>
+              ${s.image_missing ? '<p class="text-xs text-amber-700 mt-1">ไฟล์รูปในเครื่องหาย — กดแก้ไขแล้วอัปโหลดใหม่</p>' : ''}
               <div class="ban-mini-themes" role="group" aria-label="เปลี่ยนสีแบนเนอร์">
                 ${themeOptions.filter((t) => t.value !== 'custom').map((t) => `
                   <button type="button" data-theme="${t.value}" data-quick-theme="${s.slide_id}"
@@ -1136,7 +1138,13 @@ async function renderBanners() {
       const json = await res.json().catch(() => ({}));
       if (!res.ok || json.success === false) throw new Error(json.message || 'อัปโหลดไม่สำเร็จ');
       document.getElementById('b-image').value = json.url;
-      if (msg) msg.textContent = 'อัปโหลดแล้ว ✓';
+      const preview = document.getElementById('bp-img');
+      if (preview) {
+        preview.onerror = null;
+        preview.src = json.url;
+        preview.style.opacity = '1';
+      }
+      if (msg) msg.textContent = 'อัปโหลดแล้ว ✓ — กดบันทึกเพื่อใช้รูปนี้';
       syncPreview();
     } catch (e) {
       if (msg) msg.textContent = e.message;

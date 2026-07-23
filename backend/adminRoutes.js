@@ -6,8 +6,8 @@ const multer = require('multer');
 const { writeSecretsFile, readSecretsFile, readLocalMail, publicMailStatus } = require('./mailSecrets');
 const { issueEmailOtp, getMailStatus } = require('./emailOtp');
 const { syncScheduleToEnrolledUsers, removeScheduleFromAllCalendars } = require('./googleCalendar');
+const { HERO_DIR, ensureHeroDir, mapHeroSlidesImages } = require('./heroImages');
 
-const HERO_DIR = path.join(__dirname, '..', 'uploads', 'hero');
 const HERO_MIME = new Set(['image/jpeg', 'image/png', 'image/webp', 'image/gif']);
 const HERO_ICONS = new Set([
     'check_circle', 'schedule', 'workspace_premium', 'school', 'star', 'verified',
@@ -20,10 +20,6 @@ function normalizeHexColor(value) {
     const m = raw.match(/^#?([0-9a-fA-F]{6})$/);
     if (!m) return null;
     return `#${m[1].toLowerCase()}`;
-}
-
-function ensureHeroDir() {
-    fs.mkdirSync(HERO_DIR, { recursive: true });
 }
 
 const heroUpload = multer({
@@ -454,7 +450,7 @@ function createAdminRouter({ poolPromise, requireLogin }) {
                 FROM BD_PTS.dbo.hero_slides
                 ORDER BY sort_order ASC, slide_id ASC
             `);
-            res.json({ success: true, data: result.recordset });
+            res.json({ success: true, data: mapHeroSlidesImages(result.recordset) });
         } catch (error) {
             res.status(500).json({ success: false, message: error.message });
         }

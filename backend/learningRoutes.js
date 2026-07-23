@@ -2,6 +2,7 @@ const express = require('express');
 const sql = require('mssql');
 const { syncAfterEnroll } = require('./googleCalendar');
 const { buildPromptPayPayload, getPromptPayId } = require('./promptpay');
+const { mapHeroSlidesImages } = require('./heroImages');
 
 function createLearningRouter({ poolPromise, requireLogin }) {
     const router = express.Router();
@@ -593,7 +594,7 @@ function createLearningRouter({ poolPromise, requireLogin }) {
                 WHERE flag_use = 1
                 ORDER BY sort_order ASC, slide_id ASC
             `);
-            res.json({ success: true, data: result.recordset });
+            res.json({ success: true, data: mapHeroSlidesImages(result.recordset) });
         } catch (error) {
             res.status(500).json({ success: false, message: error.message });
         }

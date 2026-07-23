@@ -40,6 +40,15 @@ app.use(session({
 
 const frontendDir = path.join(__dirname, '..', 'frontend');
 const componentsDir = path.join(__dirname, '..', 'components');
+const uploadsDir = path.join(__dirname, '..', 'uploads');
+
+try {
+    const { ensureHeroDir } = require('./heroImages');
+    ensureHeroDir();
+} catch (_) {
+    try { fs.mkdirSync(path.join(uploadsDir, 'hero'), { recursive: true }); } catch (__) {}
+    try { fs.mkdirSync(path.join(uploadsDir, 'avatars'), { recursive: true }); } catch (__) {}
+}
 
 // เสิร์ฟหน้าบ้านจาก frontend/
 app.use(express.static(frontendDir));
@@ -47,8 +56,8 @@ app.use(express.static(frontendDir));
 app.use(express.static(componentsDir));
 app.use('/comp', express.static(componentsDir));
 app.use('/comp', express.static(frontendDir)); // กันพาธเก่าที่เคยชี้ /comp ไปหน้า frontend
-// รูปโปรไฟล์ที่อัปโหลดจากเครื่อง
-app.use('/uploads', express.static(path.join(__dirname, '..', 'uploads')));
+// รูปโปรไฟล์ / แบนเนอร์ที่อัปโหลด
+app.use('/uploads', express.static(uploadsDir));
 
 // Health check สำหรับ Docker / Render / โหลดบาลานเซอร์
 app.get('/api/health', async (req, res) => {

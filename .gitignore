@@ -9,6 +9,10 @@ backend/google.local.js
 .DS_Store
 uploads/*
 !uploads/.gitkeep
+!uploads/hero/
+!uploads/hero/**
+!uploads/avatars/
+!uploads/avatars/**
 
 # impeccable-ignore-start
 # Ephemeral output, runtime state, and per-dev overrides.

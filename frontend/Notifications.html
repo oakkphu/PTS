@@ -7,7 +7,7 @@
 <script src="/comp/theme-boot.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@400;500;600;700&display=swap" rel="stylesheet">
 <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet">
-<link rel="stylesheet" href="site.css?v=20260722f">
+<link rel="stylesheet" href="site.css?v=20260723e">
 <script src="https://cdn.tailwindcss.com"></script>
 <script>tailwind.config={theme:{extend:{colors:{primary:'#974258','on-surface-variant':'#544245',error:'#ba1a1a'}}}}</script>
 </head>
@@ -26,7 +26,7 @@
     </div>
   </nav>
 </div>
-<main class="pts-main" style="max-width:800px">
+<main class="pts-main" data-user-shell>
   <section class="pts-page-hero flex flex-col md:flex-row md:items-end md:justify-between gap-3">
     <div>
       <span class="pts-chip mb-3">Notifications</span>
@@ -101,6 +101,7 @@ load();
   }
 })();
 </script>
+<script src="/comp/user-sidebar.js?v=20260723e"></script>
 <script src="/comp/navbar.js?v=20260723d"></script>
 </body>
 </html>

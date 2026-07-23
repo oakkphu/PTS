@@ -3,7 +3,7 @@
 <meta content="width=device-width, initial-scale=1.0" name="viewport">
 <title>PTS Learning Dashboard</title>
 <script src="/comp/theme-boot.js"></script>
-<link rel="stylesheet" href="site.css?v=20260722h">
+<link rel="stylesheet" href="site.css?v=20260723e">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 <script src="/comp/attendance-qr.js?v=20260722h"></script>
 <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
@@ -163,60 +163,12 @@
 </script>
 
 <script src="/comp/navbar.js?v=20260723d"></script>
+<script src="/comp/user-sidebar.js?v=20260723e"></script>
 
-<div class="flex min-h-screen">
-<!-- SideNavBar -->
-<aside class="h-screen w-72 hidden lg:flex flex-col sticky left-0 top-[68px] bg-surface-container-lowest border-r border-outline-variant/30" style="height:calc(100vh - 68px)">
-<div class="flex flex-col gap-base p-md h-full">
-<!-- Brand Anchor -->
-<div class="flex items-center gap-sm mb-lg px-xs">
-<div class="w-12 h-12 rounded-full overflow-hidden border-2 border-primary-container/30 shrink-0">
-<img alt="User Profile" class="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida/AP1WRLtzIYU184zJePCq2mE7-nvwDKiy7lZKnTwB8PIhhdygm6F3F2XJpgOVEc2ewjmifgCBf3AYL3_i4w1VA69NtLJg_PMxPn485q444V4n3u8rPRRJfeB34PqTkUr50U6Z0YfauJY18prKwe4761TB3IJ-YZF3Vcm7ygM3mFY5PnqrJYwyrC3MLIGL48QX8UZ-KshQvoHEwpaczEve-p2x64tBTOAhMTL-x3dL_lWawpBRmXhoXiQje0_bvW4">
-</div>
-<div class="overflow-hidden">
-<h1 id="dash-sidebar-name" class="font-headline-sm text-headline-sm font-bold text-on-primary-container leading-tight truncate">กำลังโหลด...</h1>
-<p class="text-[10px] text-on-surface-variant truncate">PTS Student</p>
-</div>
-</div>
-<!-- Navigation Links -->
-<nav class="flex flex-col gap-xs flex-grow"><a class="flex items-center gap-sm bg-secondary-container text-on-secondary-container rounded-xl px-md py-sm font-bold shadow-sm transition-transform active:scale-98" href="DashbordU.html">
-<span class="material-symbols-outlined">dashboard</span>
-<span class="font-label-md text-label-md">หน้าหลัก</span>
-</a>
-<a class="flex items-center gap-sm text-on-surface-variant hover:bg-surface-container-high hover:translate-x-1 rounded-xl px-md py-sm transition-all active:scale-98" href="#my-courses">
-<span class="material-symbols-outlined">menu_book</span>
-<span class="font-label-md text-label-md">หลักสูตรของฉัน</span>
-</a>
-<a class="flex items-center gap-sm text-on-surface-variant hover:bg-surface-container-high hover:translate-x-1 rounded-xl px-md py-sm transition-all active:scale-98" href="Schedule.html">
-<span class="material-symbols-outlined">calendar_today</span>
-<span class="font-label-md text-label-md">ตารางเรียน</span>
-</a>
-<a class="flex items-center gap-sm text-on-surface-variant hover:bg-surface-container-high hover:translate-x-1 rounded-xl px-md py-sm transition-all active:scale-98" href="Favorites.html">
-<span class="material-symbols-outlined">bookmark</span>
-<span class="font-label-md text-label-md">รายการโปรด</span>
-</a>
-<a class="flex items-center gap-sm text-on-surface-variant hover:bg-surface-container-high hover:translate-x-1 rounded-xl px-md py-sm transition-all active:scale-98" href="Payments.html">
-<span class="material-symbols-outlined">payments</span>
-<span class="font-label-md text-label-md">ชำระเงิน</span>
-</a>
-<a class="flex items-center gap-sm text-on-surface-variant hover:bg-surface-container-high hover:translate-x-1 rounded-xl px-md py-sm transition-all active:scale-98" href="Certificates.html">
-<span class="material-symbols-outlined">workspace_premium</span>
-<span class="font-label-md text-label-md">ใบประกาศ</span>
-</a></nav>
-<!-- Footer Tab -->
-<div class="mt-auto border-t border-outline-variant/30 pt-md">
-<a class="flex items-center gap-sm text-on-surface-variant hover:bg-surface-container-high hover:translate-x-1 rounded-xl px-md py-sm transition-all active:scale-98 mb-xs" href="Settings.html">
-<span class="material-symbols-outlined">settings</span>
-<span class="font-label-md text-label-md">ตั้งค่า</span>
-</a><button id="dash-logout" class="w-full flex items-center gap-sm text-error hover:bg-error-container/20 rounded-xl px-md py-sm transition-all">
-<span class="material-symbols-outlined">logout</span>
-<span class="font-label-md text-label-md">ออกจากระบบ</span>
-</button>
-</div>
-</div>
-</aside>
+<div class="pts-main pts-main--wide user-shell" style="padding-top: calc(var(--pts-nav-h, 68px) + 8px); margin-left:auto; margin-right:auto; width:100%; box-sizing:border-box;">
+<aside id="user-sidebar" class="user-side" aria-label="เมนูผู้ใช้"></aside>
 <!-- Main Content Canvas -->
-<main class="flex-grow min-w-0 pb-xl lg:pb-md" style="padding-top: calc(var(--pts-nav-h, 68px) + 8px);">
+<main class="user-main flex-grow min-w-0 pb-xl lg:pb-md" data-user-main>
 <div class="px-margin-mobile md:px-lg py-md max-w-container-max mx-auto space-y-lg">
 <!-- Stats Overview (Asymmetric Layout) -->
 <section class="grid grid-cols-1 md:grid-cols-4 gap-md">

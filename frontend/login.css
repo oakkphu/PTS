@@ -220,6 +220,14 @@ input[type="password"]::-ms-reveal,
     50% { transform: translateY(-16px); }
   }
 
+  @media (max-width: 720px) {
+    .pts-login__petal--5,
+    .pts-login__petal--6,
+    .pts-login__filament--c,
+    .pts-login__orb--c { display: none; }
+    .pts-login__petal { opacity: 0.7; }
+  }
+
   /* Main split card */
   .pts-login__shell {
     width: 100%;

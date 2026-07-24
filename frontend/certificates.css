@@ -118,9 +118,7 @@
     var(--pts-input-bg, #f7f1f3);
   overflow: hidden;
   border-bottom: 1px solid var(--pts-border, rgba(151,66,88,.1));
-  display: flex;
-  align-items: stretch;
-  justify-content: center;
+  display: block;
   padding: 0;
 }
 .cert-card__preview-scale {
@@ -128,15 +126,15 @@
   width: 100%;
   height: 100%;
   overflow: hidden;
-  display: flex;
-  justify-content: center;
-  align-items: flex-start;
+  display: block;
 }
 .cert-card__preview-scale .pts-cert {
   width: 1122px;
   height: 794px;
+  max-width: none;
   flex-shrink: 0;
-  box-shadow: 0 10px 30px rgba(28,21,32,.12);
+  box-shadow: none;
+  margin: 0;
 }
 .cert-card__body {
   padding: 16px 16px 14px;
@@ -425,13 +423,6 @@
   background: transparent;
 }
 
-.cert-modal__dialog #cert-print-root {
-  width: 100%;
-  overflow: hidden;
-  display: flex;
-  justify-content: center;
-}
-
 .pts-cert__content {
   position: relative;
   z-index: 20;
@@ -560,6 +551,8 @@
   border-radius: 24px;
   padding: 16px;
   box-shadow: 0 30px 80px rgba(0,0,0,.28);
+  display: flex;
+  flex-direction: column;
 }
 .cert-modal__bar {
   display: flex;
@@ -567,9 +560,18 @@
   gap: 8px;
   justify-content: flex-end;
   margin-bottom: 12px;
+  flex-shrink: 0;
+}
+.cert-modal__dialog #cert-print-root {
+  width: 100%;
+  overflow: hidden;
+  display: block;
+  flex: 1 1 auto;
+  min-height: 0;
 }
 .cert-modal__dialog .pts-cert {
-  margin: 0 auto;
+  margin: 0;
+  max-width: none;
 }
 
 @media print {
@@ -577,6 +579,26 @@
     size: A4 landscape;
     margin: 0;
   }
+
+  /* Hide every chrome — only the certificate prints */
+  html, body {
+    width: 297mm !important;
+    height: 210mm !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    background: #fff !important;
+    overflow: hidden !important;
+  }
+
+  body * {
+    visibility: hidden !important;
+  }
+
+  #cert-print-root,
+  #cert-print-root * {
+    visibility: visible !important;
+  }
+
   #app-navbar,
   .pts-page-hero,
   .cert-toolbar,
@@ -585,45 +607,84 @@
   .cert-modal__bar,
   .user-side,
   #user-sidebar,
-  .no-print { display: none !important; }
-
-  html, body {
-    width: 297mm;
-    height: 210mm;
-    margin: 0 !important;
-    padding: 0 !important;
-    background: #fff !important;
+  .user-shell,
+  .pts-main,
+  .no-print {
+    display: none !important;
   }
 
   .cert-modal {
     display: block !important;
-    position: static;
-    background: transparent;
-    padding: 0;
-    backdrop-filter: none;
+    position: static !important;
+    inset: auto !important;
+    background: transparent !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    backdrop-filter: none !important;
+    overflow: visible !important;
   }
   .cert-modal__dialog {
-    box-shadow: none;
-    background: transparent;
-    max-height: none;
-    padding: 0;
-    width: 297mm;
-    border-radius: 0;
+    display: block !important;
+    box-shadow: none !important;
+    background: transparent !important;
+    max-height: none !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    width: 297mm !important;
+    border-radius: 0 !important;
+    overflow: visible !important;
+  }
+  #cert-print-root {
+    position: absolute !important;
+    left: 0 !important;
+    top: 0 !important;
+    width: 297mm !important;
+    height: 210mm !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    overflow: visible !important;
   }
   .pts-cert {
-    width: 1122px !important;
-    height: 794px !important;
+    width: 297mm !important;
+    height: 210mm !important;
     max-width: none !important;
     box-shadow: none !important;
-    padding: 25px !important;
+    padding: 6mm !important;
+    margin: 0 !important;
     transform: none !important;
-    page-break-inside: avoid;
+    page-break-after: avoid !important;
+    page-break-inside: avoid !important;
     -webkit-print-color-adjust: exact;
     print-color-adjust: exact;
   }
-  #cert-print-root {
-    height: auto !important;
-    overflow: visible !important;
+}
+
+/* Standalone print window (download) — certificate only */
+html.cert-print-only,
+html.cert-print-only body {
+  margin: 0 !important;
+  padding: 0 !important;
+  background: #fff !important;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+}
+html.cert-print-only body {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+html.cert-print-only .pts-cert {
+  max-width: none;
+  box-shadow: none;
+  margin: 0;
+  transform: none !important;
+}
+@media print {
+  html.cert-print-only .pts-cert {
+    width: 297mm !important;
+    height: 210mm !important;
+    padding: 6mm !important;
   }
 }
 

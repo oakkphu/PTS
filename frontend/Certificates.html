@@ -6,7 +6,7 @@
 <title>ใบประกาศนียบัตร | PTS Learning</title>
 <script src="/comp/theme-boot.js"></script>
 <link rel="stylesheet" href="site.css?v=20260723t">
-<link rel="stylesheet" href="certificates.css?v=20260723t">
+<link rel="stylesheet" href="certificates.css?v=20260724a">
 <link href="https://fonts.googleapis.com/css2?family=Libre+Baskerville:wght@400;700&amp;family=Sarabun:wght@300;400;600;700&amp;family=IBM+Plex+Sans+Thai:wght@400;500;600;700&amp;family=Sora:wght@600;700&amp;display=swap" rel="stylesheet">
 <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
 </head>
@@ -138,17 +138,76 @@ function fitCertPreview(root) {
   const slot = root.parentElement && root.parentElement.classList.contains('cert-card__preview')
     ? root.parentElement
     : root;
-  const availW = Math.max(240, slot.clientWidth || root.clientWidth || 0);
-  const availH = Math.max(0, slot.clientHeight || 0);
-  // Scale certificate to fill the preview/modal slot
-  let scale = availW / 1122;
-  if (availH > 40) {
-    scale = Math.min(availW / 1122, availH / 794);
-  }
+  // Fill the slot width edge-to-edge (A4 landscape aspect matches the card)
+  const availW = Math.max(200, slot.clientWidth || root.clientWidth || 0);
+  const scale = availW / 1122;
+  cert.style.maxWidth = 'none';
   cert.style.transform = `scale(${scale})`;
-  cert.style.transformOrigin = 'top center';
+  cert.style.transformOrigin = 'top left';
   root.style.width = '100%';
   root.style.height = `${Math.ceil(794 * scale)}px`;
+}
+
+function printCertificateOnly() {
+  const root = document.getElementById('cert-print-root');
+  const certHtml = root && root.innerHTML;
+  if (!certHtml) return;
+
+  const cssHref = new URL('certificates.css?v=20260724a', window.location.href).href;
+  const fontsHref = 'https://fonts.googleapis.com/css2?family=Libre+Baskerville:wght@400;700&family=Sarabun:wght@300;400;600;700&family=IBM+Plex+Sans+Thai:wght@400;500;600;700&display=swap';
+  const win = window.open('', '_blank', 'noopener,noreferrer,width=1200,height=860');
+  if (!win) {
+    // Popup blocked — fall back to in-page print with chrome hidden via CSS
+    document.body.classList.add('cert-printing');
+    const cert = root.querySelector('.pts-cert');
+    if (cert) {
+      cert.style.transform = 'none';
+      root.style.height = '';
+    }
+    const restore = () => {
+      document.body.classList.remove('cert-printing');
+      window.removeEventListener('afterprint', restore);
+      fitCertPreview(root);
+    };
+    window.addEventListener('afterprint', restore);
+    window.print();
+    setTimeout(restore, 1500);
+    return;
+  }
+
+  win.document.open();
+  win.document.write(`<!DOCTYPE html>
+<html lang="th" class="cert-print-only">
+<head>
+<meta charset="utf-8">
+<title>ใบประกาศนียบัตร</title>
+<link rel="stylesheet" href="${cssHref}">
+<link href="${fontsHref}" rel="stylesheet">
+<style>
+  @page { size: A4 landscape; margin: 0; }
+  html, body { margin: 0; padding: 0; background: #fff; }
+  body { display: flex; align-items: center; justify-content: center; min-height: 100vh; }
+  .pts-cert { transform: none !important; max-width: none; box-shadow: none; margin: 0; }
+  @media print {
+    html, body { width: 297mm; height: 210mm; min-height: 0; }
+    body { display: block; }
+    .pts-cert { width: 297mm !important; height: 210mm !important; padding: 6mm !important; }
+  }
+</style>
+</head>
+<body>${certHtml}
+<script>
+  window.onload = function () {
+    setTimeout(function () {
+      window.focus();
+      window.print();
+    }, 250);
+  };
+  window.onafterprint = function () { window.close(); };
+<\/script>
+</body>
+</html>`);
+  win.document.close();
 }
 
 function modeTag(mode) {
@@ -184,7 +243,10 @@ function openCert(cert) {
   modal.classList.add('is-open');
   modal.setAttribute('aria-hidden', 'false');
   document.body.style.overflow = 'hidden';
-  requestAnimationFrame(() => fitCertPreview(root));
+  requestAnimationFrame(() => {
+    fitCertPreview(root);
+    requestAnimationFrame(() => fitCertPreview(root));
+  });
 }
 
 function closeCert() {
@@ -315,16 +377,7 @@ async function init() {
     };
   });
   document.getElementById('cert-close-btn').onclick = closeCert;
-  document.getElementById('cert-print-btn').onclick = () => {
-    const root = document.getElementById('cert-print-root');
-    const cert = root && root.querySelector('.pts-cert');
-    if (cert) {
-      cert.style.transform = 'none';
-      root.style.height = '';
-    }
-    window.print();
-    requestAnimationFrame(() => fitCertPreview(root));
-  };
+  document.getElementById('cert-print-btn').onclick = () => printCertificateOnly();
   document.getElementById('cert-modal').addEventListener('click', (e) => {
     if (e.target.id === 'cert-modal') closeCert();
   });

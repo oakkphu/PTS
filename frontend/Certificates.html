@@ -153,64 +153,22 @@ function fitCertPreview(root) {
 
 function printCertificateOnly() {
   const root = document.getElementById('cert-print-root');
-  const certHtml = root && root.innerHTML;
-  if (!certHtml) return;
+  if (!root || !root.querySelector('.pts-cert')) return;
 
-  const cssHref = new URL('certificates.css?v=20260724e', window.location.href).href;
-  const fontsHref = 'https://fonts.googleapis.com/css2?family=Libre+Baskerville:wght@400;700&family=Sarabun:wght@300;400;600;700&family=IBM+Plex+Sans+Thai:wght@400;500;600;700&display=swap';
-  const win = window.open('', '_blank', 'noopener,noreferrer,width=1200,height=860');
-  if (!win) {
-    // Popup blocked — fall back to in-page print with chrome hidden via CSS
-    document.body.classList.add('cert-printing');
-    const cert = root.querySelector('.pts-cert');
-    if (cert) {
-      cert.style.transform = 'none';
-      root.style.height = '';
-    }
-    const restore = () => {
-      document.body.classList.remove('cert-printing');
-      window.removeEventListener('afterprint', restore);
-      fitCertPreview(root);
-    };
-    window.addEventListener('afterprint', restore);
-    window.print();
-    setTimeout(restore, 1500);
-    return;
-  }
+  document.body.classList.add('cert-printing');
+  root.style.setProperty('--cert-scale', '1');
+  root.style.height = '';
 
-  win.document.open();
-  win.document.write(`<!DOCTYPE html>
-<html lang="th" class="cert-print-only">
-<head>
-<meta charset="utf-8">
-<title>ใบประกาศนียบัตร</title>
-<link rel="stylesheet" href="${cssHref}">
-<link href="${fontsHref}" rel="stylesheet">
-<style>
-  @page { size: A4 landscape; margin: 0; }
-  html, body { margin: 0; padding: 0; background: #fff; }
-  body { display: flex; align-items: center; justify-content: center; min-height: 100vh; }
-  .pts-cert { transform: none !important; max-width: none; box-shadow: none; margin: 0; }
-  @media print {
-    html, body { width: 297mm; height: 210mm; min-height: 0; }
-    body { display: block; }
-    .pts-cert { width: 297mm !important; height: 210mm !important; padding: 6mm !important; }
-  }
-</style>
-</head>
-<body>${certHtml}
-<script>
-  window.onload = function () {
-    setTimeout(function () {
-      window.focus();
-      window.print();
-    }, 250);
+  const restore = () => {
+    document.body.classList.remove('cert-printing');
+    window.removeEventListener('afterprint', restore);
+    fitCertPreview(root);
   };
-  window.onafterprint = function () { window.close(); };
-<\/script>
-</body>
-</html>`);
-  win.document.close();
+  window.addEventListener('afterprint', restore);
+  // Print in the same tab — no about:blank popup
+  window.print();
+  // Fallback restore if afterprint does not fire (some Edge builds)
+  setTimeout(restore, 2000);
 }
 
 function modeTag(mode) {

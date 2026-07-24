@@ -653,8 +653,15 @@ body.cert-modal-open .user-side {
     margin: 0 !important;
     padding: 0 !important;
     overflow: visible !important;
+    --cert-scale: 1 !important;
+    background: transparent !important;
+    border-radius: 0 !important;
   }
-  .pts-cert {
+  .pts-cert,
+  .cert-modal__dialog #cert-print-root .pts-cert {
+    position: static !important;
+    top: auto !important;
+    left: auto !important;
     width: 297mm !important;
     height: 210mm !important;
     max-width: none !important;

@@ -365,7 +365,9 @@ a { color: inherit; }
 
 .pts-main--wide { max-width: 1240px; }
 
-/* —— User shell: full-bleed + left vertical sidebar —— */
+/* —— User / Admin shell: full-bleed + left rail (no extra top gap) ——
+   #app-navbar already reserves --pts-nav-h in document flow for the fixed nav,
+   so these shells must NOT add another padding-top or a visible gap appears. */
 .pts-main.user-shell,
 .pts-main.pts-main--user,
 .pts-main.admin-shell {
@@ -373,7 +375,7 @@ a { color: inherit; }
   width: 100%;
   margin-left: 0;
   margin-right: 0;
-  padding-top: var(--pts-nav-h, 68px);
+  padding-top: 0 !important;
   padding-left: 0;
   padding-right: 0;
   padding-bottom: 0;
@@ -384,7 +386,7 @@ a { color: inherit; }
   .pts-main.user-shell,
   .pts-main.pts-main--user,
   .pts-main.admin-shell {
-    padding-top: var(--pts-nav-h, 68px);
+    padding-top: 0 !important;
   }
 }
 

@@ -3,7 +3,7 @@
         <script src="/comp/theme-boot.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@300;400;500;600;700&amp;family=Sora:wght@500;600;700&amp;display=swap" rel="stylesheet">
         <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=block" rel="stylesheet">
-        <link rel="stylesheet" href="site.css?v=20260724x">
+        <link rel="stylesheet" href="site.css?v=20260724z">
         <!-- pts-build:20260724x-image-banner -->
         <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
         <script id="tailwind-config">try{
@@ -125,18 +125,32 @@
 </div>
 
 <main>
-<!-- Hero: single full-bleed promotional image -->
-<section class="pts-home-banner" aria-label="แบนเนอร์หน้าแรก">
-  <img
-    id="home-banner-img"
-    src="/uploads/hero/home-banner.png"
-    alt="RIGHT-HAND PARTNER PROGRAM — Personal Assistant Academy"
-    width="1536"
-    height="1024"
-    decoding="async"
-    fetchpriority="high"
-    onerror="this.onerror=null;this.src='/assets/home-banner.png'"
-  >
+<!-- Hero: playful multi-banner carousel (viewport-fit) -->
+<section class="pts-home-banner is-single" id="home-banner" aria-label="แบนเนอร์หน้าแรก" aria-roledescription="carousel">
+  <div class="pts-home-banner__track" id="home-banner-track">
+    <article class="pts-home-banner__slide is-active" data-index="0">
+      <img
+        src="/uploads/hero/home-banner.png"
+        alt="RIGHT-HAND PARTNER PROGRAM — Personal Assistant Academy"
+        width="1536"
+        height="1024"
+        decoding="async"
+        fetchpriority="high"
+        onerror="this.onerror=null;this.src='/assets/home-banner.png'"
+      >
+      <span class="pts-home-banner__veil" aria-hidden="true"></span>
+    </article>
+  </div>
+  <div class="pts-home-banner__nav" aria-hidden="false">
+    <button type="button" class="pts-home-banner__btn" id="home-banner-prev" aria-label="แบนเนอร์ก่อนหน้า">
+      <span class="material-symbols-outlined">chevron_left</span>
+    </button>
+    <button type="button" class="pts-home-banner__btn" id="home-banner-next" aria-label="แบนเนอร์ถัดไป">
+      <span class="material-symbols-outlined">chevron_right</span>
+    </button>
+  </div>
+  <div class="pts-home-banner__dots" id="home-banner-dots" role="tablist" aria-label="เลือกแบนเนอร์"></div>
+  <div class="pts-home-banner__progress" aria-hidden="true"><span id="home-banner-progress"></span></div>
 </section>
 <!-- Choose Learning Type Section -->
 <section class="py-xl bg-surface">
@@ -439,14 +453,168 @@ document.addEventListener('DOMContentLoaded', async () => {
   let allCourses = [];
   let activeMode = '';
 
-  // โหลด URL รูปจาก uploads/hero/home-banner.png (มี cache-bust)
-  fetch('/api/home-banner')
-    .then((r) => r.json())
-    .then((j) => {
-      const img = document.getElementById('home-banner-img');
-      if (img && j?.success && j.data?.url) img.src = j.data.url;
-    })
-    .catch(() => {});
+  // —— Playful multi-banner carousel (viewport-fit) ——
+  (function initHomeBannerCarousel() {
+    const root = document.getElementById('home-banner');
+    const track = document.getElementById('home-banner-track');
+    const dotsBox = document.getElementById('home-banner-dots');
+    const prevBtn = document.getElementById('home-banner-prev');
+    const nextBtn = document.getElementById('home-banner-next');
+    const progressEl = document.getElementById('home-banner-progress');
+    if (!root || !track) return;
+
+    const INTERVAL = 5200;
+    const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    root.style.setProperty('--hb-interval', INTERVAL + 'ms');
+
+    let slides = [];
+    let index = 0;
+    let timer = null;
+    let dragging = false;
+    let startX = 0;
+    let deltaX = 0;
+
+    const escapeAttr = (t) => String(t || '').replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;');
+
+    function sparkle() {
+      if (reduceMotion) return;
+      for (let i = 0; i < 5; i += 1) {
+        const s = document.createElement('span');
+        s.className = 'pts-home-banner__sparkle';
+        s.style.left = (12 + Math.random() * 76) + '%';
+        s.style.top = (18 + Math.random() * 50) + '%';
+        s.style.animationDelay = (Math.random() * 180) + 'ms';
+        root.appendChild(s);
+        window.setTimeout(() => s.remove(), 800);
+      }
+    }
+
+    function render(list) {
+      slides = list.length ? list : [{
+        url: '/assets/home-banner.png',
+        alt: 'PTS Learning'
+      }];
+      root.classList.toggle('is-single', slides.length < 2);
+      track.innerHTML = slides.map((s, i) => `
+        <article class="pts-home-banner__slide${i === 0 ? ' is-active' : ''}" data-index="${i}">
+          <img src="${escapeAttr(s.url)}" alt="${escapeAttr(s.alt || 'Banner')}"
+            decoding="${i === 0 ? 'async' : 'async'}" ${i === 0 ? 'fetchpriority="high"' : 'loading="lazy"'}
+            onerror="this.onerror=null;this.src='/assets/home-banner.png'">
+          <span class="pts-home-banner__veil" aria-hidden="true"></span>
+        </article>`).join('');
+      dotsBox.innerHTML = slides.map((_, i) => `
+        <button type="button" class="pts-home-banner__dot${i === 0 ? ' is-active' : ''}"
+          role="tab" aria-label="แบนเนอร์ ${i + 1}" data-index="${i}"></button>`).join('');
+      index = 0;
+      goTo(0, false);
+      if (slides.length > 1) start();
+    }
+
+    function updateDots() {
+      dotsBox.querySelectorAll('.pts-home-banner__dot').forEach((d, i) => {
+        d.classList.toggle('is-active', i === index);
+      });
+      track.querySelectorAll('.pts-home-banner__slide').forEach((el, i) => {
+        el.classList.toggle('is-active', i === index);
+      });
+    }
+
+    function goTo(next, animate) {
+      if (!slides.length) return;
+      index = ((next % slides.length) + slides.length) % slides.length;
+      if (animate !== false) sparkle();
+      track.style.transform = `translate3d(${-index * 100}%, 0, 0)`;
+      updateDots();
+      restartProgress();
+    }
+
+    function next() { goTo(index + 1, true); }
+    function prev() { goTo(index - 1, true); }
+
+    function restartProgress() {
+      if (!progressEl || slides.length < 2 || reduceMotion) return;
+      progressEl.classList.remove('is-running', 'is-paused');
+      void progressEl.offsetWidth;
+      progressEl.classList.add('is-running');
+    }
+
+    function start() {
+      stop();
+      if (slides.length < 2 || reduceMotion) return;
+      restartProgress();
+      timer = window.setInterval(next, INTERVAL);
+    }
+    function stop() {
+      if (timer) { window.clearInterval(timer); timer = null; }
+      if (progressEl) progressEl.classList.add('is-paused');
+    }
+
+    prevBtn?.addEventListener('click', () => { prev(); start(); });
+    nextBtn?.addEventListener('click', () => { next(); start(); });
+    dotsBox?.addEventListener('click', (e) => {
+      const btn = e.target.closest('.pts-home-banner__dot');
+      if (!btn) return;
+      goTo(Number(btn.dataset.index), true);
+      start();
+    });
+
+    root.addEventListener('mouseenter', stop);
+    root.addEventListener('mouseleave', start);
+    root.addEventListener('focusin', stop);
+    root.addEventListener('focusout', (e) => {
+      if (!root.contains(e.relatedTarget)) start();
+    });
+
+    // Swipe / drag
+    const onDown = (x) => {
+      if (slides.length < 2) return;
+      dragging = true;
+      startX = x;
+      deltaX = 0;
+      root.classList.add('is-dragging');
+      stop();
+    };
+    const onMove = (x) => {
+      if (!dragging) return;
+      deltaX = x - startX;
+      const pct = (deltaX / Math.max(root.clientWidth, 1)) * 100;
+      track.style.transform = `translate3d(${(-index * 100) + pct}%, 0, 0)`;
+    };
+    const onUp = () => {
+      if (!dragging) return;
+      dragging = false;
+      root.classList.remove('is-dragging');
+      if (Math.abs(deltaX) > root.clientWidth * 0.18) {
+        if (deltaX < 0) next(); else prev();
+      } else {
+        goTo(index, false);
+      }
+      start();
+    };
+
+    root.addEventListener('pointerdown', (e) => {
+      if (e.target.closest('.pts-home-banner__btn, .pts-home-banner__dot')) return;
+      root.setPointerCapture?.(e.pointerId);
+      onDown(e.clientX);
+    });
+    root.addEventListener('pointermove', (e) => onMove(e.clientX));
+    root.addEventListener('pointerup', onUp);
+    root.addEventListener('pointercancel', onUp);
+
+    document.addEventListener('keydown', (e) => {
+      if (!root.matches(':hover') && document.activeElement !== root) return;
+      if (e.key === 'ArrowLeft') { prev(); start(); }
+      if (e.key === 'ArrowRight') { next(); start(); }
+    });
+
+    fetch('/api/home-banners')
+      .then((r) => r.json())
+      .then((j) => {
+        const list = (j?.success && Array.isArray(j.data)) ? j.data : [];
+        render(list);
+      })
+      .catch(() => render([]));
+  })();
 
   const modeBadge = (mode) => {
     const m = String(mode || 'online').toLowerCase();
